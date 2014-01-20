@@ -16,17 +16,16 @@ import shutil
 from time import sleep
 from os.path import isfile
 import subprocess
-#import win32process
 
-download_dir = "C:\\Users\\Ruben\\Downloads"
-ffmpeg = "C:\\tools\\ffmpeg.exe"+" "
-output_folder = "N:\\Serien\\"
-dl_video_folder = "N:\\Filme\\"
-other_files_dir = "C:\\Users\\Ruben\\Downloads\\other files\\"
+download_dir = "~/Downloads"
+ffmpeg = "ffmpeg"+" "
+output_folder = "~/Serien/"
+dl_video_folder = "~/Filme/"
+other_files_dir = "~/Downloads/other files/"
 move_other_files = True
-too_less_numbers = "C:\\Users\\Ruben\\Downloads\\too less numbers\\"
-too_many_numbers = "C:\\Users\\Ruben\\Downloads\\too many numbers\\"
-series_unknown = "C:\\Users\\Ruben\\Downloads\\series unknown\\"
+too_less_numbers = "~/Downloads/too less numbers/"
+too_many_numbers = "~/Downloads/too many numbers/"
+series_unknown = "~/Downloads/series unknown/"
 
 conversation_dict = {}
 conversation_dict2 = {}
