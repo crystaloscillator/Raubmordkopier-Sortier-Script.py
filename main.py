@@ -265,6 +265,9 @@ conversation_dict3[52] = "animation"
 conversation_dict["lostgirl"] = 53
 conversation_dict2[53] = "Lost Girl"
 conversation_dict3[53] = "film"
+conversation_dict["arrow"] = 54
+conversation_dict2[54] = "Arrow"
+conversation_dict3[54] = "film"
 
 remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "X264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
 seperators = ["_", " ", ".", "-", ","]
@@ -295,7 +298,7 @@ def checkMKV(sMkvInfo_txt):
 			found+=1
 		if line.startswith("|   + Abtastrate:") and "32000" in line:
 			found+=1
-	if found == 2:
+	if (found % 2) == 0 and found != 0:
 		return 0
 	return 1
 	
@@ -571,7 +574,8 @@ while True:
 		.replace("S1 S01E", "01") \
 		.replace("S1 S02E", "02") \
 		.replace("S1 S03E", "03") \
-		.replace("3D", "_")
+		.replace("3D", "_") \
+		.replace(".108-pretail.", ".")
 		for char in fn:
 			try:
 				tmpint = int(char)
