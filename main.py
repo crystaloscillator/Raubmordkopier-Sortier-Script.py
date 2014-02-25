@@ -271,7 +271,7 @@ seperators = ["_", " ", ".", "-", ","]
 try:
 	os.chdir(download_dir)
 except FileNotFoundError:
-	print("Error: Download-Directory not found")
+	print("Error: Download-directory not found")
 	exit(1)
 
 def ensure_dir(f):
@@ -305,13 +305,13 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	# sTune       - Film or Animation Seriestype
 	# sTitle      - The Title of the Series -> Output Filename + .mkv
 	needTranscode = 0
-	tmpFilename = sInputFile + "_"
+	tmpFilename = sInputFile + "_ffmpeg"
 	outputPath = tmp_folder+sTitle+".mkv"
 	try:
 		shutil.move(sInputFile, tmpFilename)
 	except:
-		print("rename "+sInputFile+" to "+tmpFilename+" failed")
-		return [999, ""]
+		print("Error: Renaming "+sInputFile+" to "+tmpFilename+" failed")
+		return [999, tmpFilename, ""]
 	
 	cmd1 = [ffmpeg, "-i", tmpFilename, "-vcodec", "libx264", "-crf", "26", "-preset", "slow", "-tune", sTune, \
 			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "mkv", \
@@ -322,7 +322,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 		try:
 			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename]))
 		except CalledProcessError:
-			return [998, ""]
+			return [998, tmpFilename, ""]
 	if needTranscode:
 		cmd = cmd1
 		print("Info: Transcoding A/V-Data, this might take some while...")
@@ -335,9 +335,9 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			print("Error: While doing FFMPEG-Transcoding, return code: '"+str(e.returncode)+"'")
 		else
 			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
-		return [e.returncode, ""]
+		return [e.returncode, tmpFilename, ""]
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
-	return [0, outputPath]
+	return [0, tmpFilename, outputPath]
 	
 first_time_loop = 1
 while True:
@@ -422,7 +422,7 @@ while True:
 		elif file[-5] == ".":
 			skip_file = True
 		elif isfile(file):
-			print(" - no filetype detected, use AVI - should not happend!")
+			print("Warning: no filetype detected, use AVI - should not happen!")
 			new_filename[8] = "avi"
 		else: #folder
 			continue
@@ -432,11 +432,11 @@ while True:
 		if skip_file:
 			if move_other_files:
 				try:
-					print("moving file '"+str(file)+"' to 'other files'")
+					print("Info: No usable file-extension found, moving file '"+str(file)+"' to 'other files'")
 					ensure_dir(other_files_dir+file)
 					shutil.move(file, other_files_dir+file)
 				except:
-					print("ERROR: Can't move file '"+str(file)+"'")
+					print("Error: Can't move file '"+str(file)+"'")
 					pass
 			continue
 		
@@ -605,7 +605,7 @@ while True:
 		
 		if counter > 4:
 			try:
-				print("too many numbers in filename, moving file '"+str(file)+"' to 'too many numbers'")
+				print("Info: Too many numbers in filename, moving file '"+str(file)+"' to 'too many numbers'")
 				ensure_dir(too_many_numbers+file)
 				shutil.move(file, too_many_numbers+file)	
 			except:
@@ -614,7 +614,7 @@ while True:
 		
 		elif counter == 0:
 			try:
-				print("error while parsing episode/season, moving file '"+str(file)+"' to 'Filme'")
+				print("Info: No episode/season found, moving file '"+str(file)+"' to 'Filme'")
 				ensure_dir(dl_video_folder+file)
 				shutil.move(file, dl_video_folder+file)
 			except:
@@ -623,7 +623,7 @@ while True:
 			
 		elif counter == 1:
 			try:
-				print("too less numbers in filename, moving file '"+str(file)+"' to 'too less numbers'")
+				print("Info: Too less numbers in filename, moving file '"+str(file)+"' to 'too less numbers'")
 				ensure_dir(too_less_numbers+file)
 				shutil.move(file, too_less_numbers+file)
 			except:
@@ -661,7 +661,7 @@ while True:
 				break
 		if not found:
 			try:
-				print("Series unknown, moving file '"+str(file)+"' to series unknown")
+				print("Info: Series unknown, moving file '"+str(file)+"' to series unknown")
 				ensure_dir(series_unknown+file)
 				shutil.move(file, series_unknown+file)
 			except:
@@ -674,69 +674,58 @@ while True:
 		FileTitle = ""
 		for string in new_filename[0:-1]:
 			FileTitle += string
+			
+		print("'"+str(file)+"' to '"+str(FileTitle+".mkv")+"'")
 		
-		new_file = file+".avi"
-		print("   Remuxing with ffmpeg")
+		print("   Remuxing/transcoding with ffmpeg to mkv")
 		
-		tmp_file = file+"_ffmpg"
+		ffmpeg_return = ffmpegConvertIt(bIsAnMkvInputFile, file, FileTitle, TuneProfile)
 		
-		fnord = ffmpegConvertIt(bIsAnMkvInputFile, file, FileTitle, TuneProfile)
+		input_file=ffmpeg_return[1]
+		tmp_file=[2]
 		
-		if returnvalue == 0:
+		if ffmpeg_return[0] == 0:
 			print("     Done.")
+			print("   Moving file from temp-location to series-folder..."
+
+			output_file=output_folder+FileTitle+".mkv"
+			
+			#test if file already exists:
+			if isfile(output_file):
+				print("Warning: Output File Exists '"+output_file+"'")
+				for tmp_int in range(2,100):
+					test_filename=output_folder+FileTitle+"_"+str(tmp_int)+".mkv"
+					if isfile(test_filename):
+						print("Warning: Output File Exists '"+test_filename+"'")
+					else:
+						output_file = test_filename
+						break	
+			#moving file, deleting input	
 			try:
-				os.remove(tmp_file)
-			except:
-				print("can't delete inputfile '"+str(tmp_file)+"' after remuxing with ffmpeg")
-				continue
-			
-			file = new_file
-			
-			print("   Remuxing with mkvmerge")
-		
-		###
-		
-		tmp_int = 2
-		if isfile(output_folder+new_filename_):
-			print("WARNING: Output File Exists '"+str(new_filename_)+"'")
-			while tmp_int < 100:
-				new_filename_tmp = new_filename_[:-4]+"_"+str(tmp_int)+new_filename_[-4:]
-				if isfile(output_folder+new_filename_tmp):
-					print("WARNING: Output File Exists '"+str(new_filename_)+"'")
-					tmp_int+=1
-				else:
-					new_filename_ = new_filename_tmp
-					break
-		print("'"+str(file)+"' to '"+str(new_filename_)+"'")
-		
-		###
-		
-		
-		
-			if mkvIt(new_filename_, file) == 0: #FIXME move to output folder was in this function
+				shutil.move(tmp_file, output_file)
 				print("     Done.")
+			except:
 				try:
-					os.remove(file)
-				except:
-					try:
-						shutil.move(file, new_filename_+".old")
-					except:
-						print("can't delete or move inputfile after remuxing '"+str(file)+"'")
-			else:
-				print("mkvmerge crashed on file '"+str(file)+"'")
-				try:
-					shutil.move(file, file+"_crash")
+					os.remove(output_file)
 				except:
 					pass
-		elif returnvalue == 999:
-			print("removed from queue, retry on rescan")
-		else:
-			print("ffmpeg crashed on file '"+str(file)+"'")
+				print("Error: can't move file to output location, leaving it on temp-location")
+				continue
 			try:
-				shutil.move(file, file+"_crash")
+				print("   Removing input-file..."
+				os.remove(input_file)
+				print("     Done.")
+			except:
+				print("Error: can't delete inputfile '"+str(input_file)+"' after reading with ffmpeg")
+				continue
+		elif ffmpeg_return[0] == 999:
+			print("Warning: Removed from queue, retry on rescan")
+		else:
+			print("Error: ffmpeg crashed on file '"+str(file)+"'")
+			try:
+				shutil.move(input_file, file+"_crash")
 			except:
 				pass
-
 		
 	#print("Strg+C to cancel - sleeping for 5 sec")
 	sleep(5)
