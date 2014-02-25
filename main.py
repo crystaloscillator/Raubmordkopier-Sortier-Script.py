@@ -15,17 +15,19 @@ import os
 import shutil
 from time import sleep
 from os.path import isfile
-import subprocess
+from subprocess import CalledProcessError, check_call, DEVNULL
+from os.path import expanduser
 
-download_dir = "~/Downloads"
-ffmpeg = "ffmpeg"+" "
-output_folder = "~/Serien/"
-dl_video_folder = "~/Filme/"
-other_files_dir = "~/Downloads/other files/"
+#All folders need to exist!
+download_dir = expanduser("~/Downloads/")
+ffmpeg = "ffmpeg"
+output_folder = expanduser("~/Video/Series/")
+dl_video_folder = expanduser("~/Video/Movies/")
+other_files_dir = expanduser("~/Downloads/OtherFiles/")
 move_other_files = True
-too_less_numbers = "~/Downloads/too less numbers/"
-too_many_numbers = "~/Downloads/too many numbers/"
-series_unknown = "~/Downloads/series unknown/"
+too_less_numbers = expanduser("~/Downloads/TooLessNumbers/")
+too_many_numbers = expanduser("~/Downloads/TooManyNumbers/")
+series_unknown = expanduser("~/Downloads/SeriesUnknown/")
 
 conversation_dict = {}
 conversation_dict2 = {}
@@ -203,6 +205,10 @@ conversation_dict["upon"] = 50
 conversation_dict2[50] = "Once Upon a Time"
 conversation_dict["dead"] = 51
 conversation_dict2[51] = "Dead Like Me"
+conversation_dict["ddvb"] = 52
+conversation_dict2[52] = "Drachenreiter von Berk, Die"
+conversation_dict["lostgirl"] = 53
+conversation_dict2[53] = "Lost Girl"
 
 remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
 seperators = ["_", " ", ".", "-", ","]
@@ -230,14 +236,14 @@ def ffmpegConvertIt(file, file_, new_file):
 	except:
 		print("rename "+file+" to "+file_+" failed")
 		return 999
-	#return os.system(ffmpeg+' -y -vcodec copy -acodec copy -scodec copy -i "'+file_+'" "'+new_file+'"')
-	nulfp = open(os.devnull, "w")
-	cmd = ffmpeg+' -i "'+file_+'" -y -vcodec copy -acodec copy -scodec copy  "'+new_file+'"'
-	p = subprocess.Popen(cmd, stdout=None, stderr=nulfp.fileno())
+	cmd = [ffmpeg,"-i",file_,"-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", new_file]
+	try:
+		check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+	except CalledProcessError as e:
+		print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
+		return e.returncode
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
-	tmpint = p.wait()
-	nulfp.close()
-	return tmpint
+	return 0
 	
 first_time_loop = 1
 while True:
@@ -248,10 +254,10 @@ while True:
 		
 	if first_time_loop == 2:
 		first_time_loop = False
-		print("Working queue was completed - waiting 5 sec before rescan directory")
+		print("Working queue was completed - wait 5 seconds before re-reading this directory")
 		
 	elif elements_done:
-		print("Working queue is empty - waiting 5 sec before rescan directory")
+		print("Working queue is empty - wait 5 seconds before re-reading this directory")
 		
 	elements_done = False
 	skip_file = False
@@ -336,12 +342,10 @@ while True:
 					pass
 			continue
 		
-		print(" - working...")
-		
 		#seperate strings
 		next_word = ""
 		words = []
-		fn = file.replace("S0", ".").replace("S1", ".").replace("S2", ".").replace("s0", ".").replace("s1", ".").replace("s2", ".").replace("numb3rs", "numbers").replace("Numb3rs", "numbers").replace("AC3", "").replace("sg1", "sgeins").replace("SG1", "sgeins").replace("crow_s", "scrubs").replace("SC_", "scrubs_").replace("crow-s", "scrubs_").replace("720p", " ").replace("x264", " ").replace("gtvg-fr", "fringe").replace("futu", "futurama ")
+		fn = file.replace("S0", ".").replace("S1", ".").replace("S2", ".").replace("s0", ".").replace("s1", ".").replace("s2", ".").replace("numb3rs", "numbers").replace("Numb3rs", "numbers").replace("AC3", "").replace("sg1", "sgeins").replace("SG1", "sgeins").replace("crow_s", "scrubs").replace("SC_", "scrubs_").replace("crow-s", "scrubs_").replace("720p", " ").replace("x264", " ").replace("gtvg-fr", "fringe").replace("futu", "futurama ").replace("lost.girl", "lostgirl").replace("gu10conti2", "continuum 02x").replace("gu10conti3", "continuum 03x").replace("gu10conti1", "continuum 01x").replace("gu10conti4", "continuum 04x")
 		fn = fn.replace("0", " ").replace("1", " ").replace("2", " ").replace("3", " ").replace("4", " ").replace("5", " ").replace("6", " ").replace("7", " ").replace("8", " ").replace("9", " ").replace("Teil.2", "_").replace("teil.2", "_").replace("Teil2", "_").replace("teil2", "_").replace("Teil.2", "_").replace("Teil.1", "_").replace("teil.1", "_").replace("Teil1", "_").replace("teil1", "_").replace("Teil.1", "_")
 		for char in fn:
 			if char in seperators:
