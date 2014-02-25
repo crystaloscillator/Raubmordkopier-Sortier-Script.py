@@ -15,19 +15,19 @@ import os
 import shutil
 from time import sleep
 from os.path import isfile
-from subprocess import CalledProcessError, check_call, DEVNULL
+from subprocess import CalledProcessError, check_call, DEVNULL, check_output, STDOUT
 from os.path import expanduser
 
-download_dir = expanduser("/data/Test/Input")
+download_dir = expanduser("/data/Serien_input/")
 ffmpeg = "ffmpeg"
 mkvinfo = "mkvinfo"
-output_folder = expanduser("/data/Test/Serien/")
-dl_video_folder = expanduser("/data/Test/Filme/")
-other_files_dir = expanduser("/data/Test/Input/other files/")
+output_folder = expanduser("/data/Serien/")
+dl_video_folder = expanduser("/data/Filme_input/sort_series.py/")
+other_files_dir = expanduser("/data/Serien_input/other files/")
 move_other_files = True
-too_less_numbers = expanduser("/data/Test/Input/too less numbers/")
-too_many_numbers = expanduser("/data/Test/Input/too many numbers/")
-series_unknown = expanduser("/data/Test/Input/series unknown/")
+too_less_numbers = expanduser("/data/Serien_input/too less numbers/")
+too_many_numbers = expanduser("/data/Serien_input/too many numbers/")
+series_unknown = expanduser("/data/Serien_input/series unknown/")
 tmp_folder = expanduser("/tmp/")
 
 conversation_dict = {} #Search-strings
@@ -266,7 +266,7 @@ conversation_dict["lostgirl"] = 53
 conversation_dict2[53] = "Lost Girl"
 conversation_dict3[53] = "film"
 
-remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
+remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "X264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
 seperators = ["_", " ", ".", "-", ","]
 try:
 	os.chdir(download_dir)
@@ -288,12 +288,12 @@ def FixString(str):
 			out = out[:len(out)-len(rem_str)]
 	return out
 
-def checkMKV(sMkvInfo_txt)
+def checkMKV(sMkvInfo_txt):
 	found = 0
-	for line in sMkvInfo_txt:
-		if line.startswith("|  + Codec-ID:") and line.endswith("A_VORBIS"):
+	for line in sMkvInfo_txt.split("\n"):
+		if line.startswith("|  + Codec-ID:") and "A_VORBIS" in line:
 			found+=1
-		if line.startswith("|   + Abtastrate:") and line.endswith("32000"):
+		if line.startswith("|   + Abtastrate:") and "32000" in line:
 			found+=1
 	if found == 2:
 		return 0
@@ -305,7 +305,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	# sTune       - Film or Animation Seriestype
 	# sTitle      - The Title of the Series -> Output Filename + .mkv
 	needTranscode = 0
-	tmpFilename = sInputFile + "_ffmpeg"
+	tmpFilename = sInputFile + "_ffmpg"
 	outputPath = tmp_folder+sTitle+".mkv"
 	try:
 		shutil.move(sInputFile, tmpFilename)
@@ -313,27 +313,30 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 		print("Error: Renaming "+sInputFile+" to "+tmpFilename+" failed")
 		return [999, tmpFilename, ""]
 	
-	cmd1 = [ffmpeg, "-i", tmpFilename, "-vcodec", "libx264", "-crf", "26", "-preset", "slow", "-tune", sTune, \
-			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "mkv", \
+	cmd1 = [ffmpeg, "-i", tmpFilename, "-y", "-vcodec", "libx264", "-crf", "24", "-preset", "slow", "-tune", sTune, \
+			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "matroska", \
 			"-metadata", 'title="'+sTitle+'"', outputPath]
-	cmd2 = [ffmpeg,"-i",tmpFilename,"-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", "-metadata", 'title="'+sTitle+'"', outputPath]
+	cmd2 = [ffmpeg,"-i",tmpFilename, "-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", "-metadata", 'title="'+sTitle+'"', "-f", "matroska", outputPath]
 	
 	if bMKV:
 		try:
-			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename]))
+			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
 		except CalledProcessError:
 			return [998, tmpFilename, ""]
+	#FIXME
+	#needTranscode = 0
 	if needTranscode:
 		cmd = cmd1
-		print("Info: Transcoding A/V-Data, this might take some while...")
-	else
+		print("   Transcoding A/V-Data with ffmpeg, this might take some while...")
+	else:
+		print("   Remuxing with ffmpeg to mkv")
 		cmd = cmd2
 	try:
 		check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
 	except CalledProcessError as e:
 		if needTranscode:
 			print("Error: While doing FFMPEG-Transcoding, return code: '"+str(e.returncode)+"'")
-		else
+		else:
 			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
 		return [e.returncode, tmpFilename, ""]
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
@@ -672,29 +675,28 @@ while True:
 		new_filename[-1] = "mkv"
 		
 		FileTitle = ""
-		for string in new_filename[0:-1]:
+		for string in new_filename[0:-2]:
 			FileTitle += string
 			
 		print("'"+str(file)+"' to '"+str(FileTitle+".mkv")+"'")
 		
-		print("   Remuxing/transcoding with ffmpeg to mkv")
-		
 		ffmpeg_return = ffmpegConvertIt(bIsAnMkvInputFile, file, FileTitle, TuneProfile)
 		
 		input_file=ffmpeg_return[1]
-		tmp_file=[2]
+		tmp_file=ffmpeg_return[2]
 		
 		if ffmpeg_return[0] == 0:
 			print("     Done.")
-			print("   Moving file from temp-location to series-folder..."
-
-			output_file=output_folder+FileTitle+".mkv"
+			print("   Moving file from temp-location to series-folder...")
+			
+			output_folder_ = output_folder+str(new_filename[0])+'/'+str(new_filename[0])+' S'+str(new_filename[2])+str(new_filename[3])+'/'
+			output_file=output_folder_+FileTitle+".mkv"
 			
 			#test if file already exists:
 			if isfile(output_file):
 				print("Warning: Output File Exists '"+output_file+"'")
 				for tmp_int in range(2,100):
-					test_filename=output_folder+FileTitle+"_"+str(tmp_int)+".mkv"
+					test_filename=output_folder_+FileTitle+"_"+str(tmp_int)+".mkv"
 					if isfile(test_filename):
 						print("Warning: Output File Exists '"+test_filename+"'")
 					else:
@@ -702,6 +704,7 @@ while True:
 						break	
 			#moving file, deleting input	
 			try:
+				ensure_dir(output_file)
 				shutil.move(tmp_file, output_file)
 				print("     Done.")
 			except:
@@ -709,10 +712,10 @@ while True:
 					os.remove(output_file)
 				except:
 					pass
-				print("Error: can't move file to output location, leaving it on temp-location")
+				print("Error: can't move file '"+tmp_file+"' to output location '"+output_file+"', leaving it on temp-location")
 				continue
 			try:
-				print("   Removing input-file..."
+				print("   Removing input-file...")
 				os.remove(input_file)
 				print("     Done.")
 			except:
