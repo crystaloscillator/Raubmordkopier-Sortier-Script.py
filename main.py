@@ -323,6 +323,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	cmd2 = [ffmpeg,"-i",tmpFilename, "-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", "-metadata", 'title="'+sTitle+'"', "-f", "matroska", outputPath]
 	
 	if bMKV:
+		print("Debug: This is an mkv, running mkvinfo...")
 		try:
 			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
 		except CalledProcessError:
@@ -511,9 +512,9 @@ while True:
 		.replace("homer27", "homer 27x") \
 		.replace("720p", " ") \
 		.replace("x264", " ") \
-		.replace("X264", " ") \		
+		.replace("X264", " ") \
 		.replace("x265", " ") \
-		.replace("X265", " ") \		
+		.replace("X265", " ") \
 		.replace("P0W4", " ") \
 		.replace("GhostUp10", " ") \
 		.replace("Prim3time", " ") \
@@ -666,7 +667,10 @@ while True:
 				found.append(conversation_dict[word.lower()])
 			except KeyError:
 				pass
-				
+		
+		#distinct list
+		found = list(set(found))
+		
 		if 1 == len(found):
 			new_filename[0] = conversation_dict2[found[0]]
 			try:
@@ -750,4 +754,8 @@ while True:
 				pass
 		
 	#print("Strg+C to cancel - sleeping for 5 sec")
-	sleep(5)
+	try:
+		sleep(5)
+	except KeyboardInterrupt:
+		print("")
+		exit(0)
