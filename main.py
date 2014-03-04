@@ -28,6 +28,7 @@ move_other_files = True
 too_less_numbers = expanduser("/data/Serien_input/too less numbers/")
 too_many_numbers = expanduser("/data/Serien_input/too many numbers/")
 series_unknown = expanduser("/data/Serien_input/series unknown/")
+no_exact_match = expanduser("/data/Serien_input/no exact match/")
 tmp_folder = expanduser("/tmp/")
 
 conversation_dict = {} #Search-strings
@@ -656,19 +657,30 @@ while True:
 			new_filename[5] = str(integers[2])
 			new_filename[6] = str(integers[3])
 			
-		found = False
+		found = []
 		for word in words:
-			if word.lower() in conversation_dict:
-				new_filename[0] = conversation_dict2[conversation_dict[word.lower()]]
-				try:
-					TuneProfile = conversation_dict3[conversation_dict[word.lower()]]
-				except:
-					pass
-				found = True
-				break
-		if not found:
 			try:
-				print("Info: Series unknown, moving file '"+str(file)+"' to series unknown")
+				found.append(conversation_dict[word.lower()])
+			except KeyError:
+				pass
+				
+		if 1 == len(found):
+			new_filename[0] = conversation_dict2[found[0]]
+			try:
+				TuneProfile = conversation_dict3[conversation_dict[word.lower()]]
+			except KeyError:
+				pass
+		elif 1 < len(found):
+			print("Info: No exact match found: "+str(found)+", moving file '"+str(file)+"' to no exact match")
+			try:
+				ensure_dir(no_exact_match+file)
+				shutil.move(file, no_exact_match+file)
+			except:
+				pass
+			continue
+		else:
+			print("Info: Series unknown, moving file '"+str(file)+"' to series unknown")
+			try:
 				ensure_dir(series_unknown+file)
 				shutil.move(file, series_unknown+file)
 			except:
