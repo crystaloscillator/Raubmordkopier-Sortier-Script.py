@@ -511,6 +511,9 @@ while True:
 		.replace("homer27", "homer 27x") \
 		.replace("720p", " ") \
 		.replace("x264", " ") \
+		.replace("X264", " ") \		
+		.replace("x265", " ") \
+		.replace("X265", " ") \		
 		.replace("P0W4", " ") \
 		.replace("GhostUp10", " ") \
 		.replace("Prim3time", " ") \
