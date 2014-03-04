@@ -15,22 +15,24 @@ import os
 import shutil
 from time import sleep
 from os.path import isfile
-from subprocess import CalledProcessError, check_call, DEVNULL
+from subprocess import CalledProcessError, check_call, DEVNULL, check_output, STDOUT
 from os.path import expanduser
 
-#All folders need to exist!
-download_dir = expanduser("~/Downloads/")
+download_dir = expanduser("/data/Serien_input/")
 ffmpeg = "ffmpeg"
-output_folder = expanduser("~/Video/Series/")
-dl_video_folder = expanduser("~/Video/Movies/")
-other_files_dir = expanduser("~/Downloads/OtherFiles/")
+mkvinfo = "mkvinfo"
+output_folder = expanduser("/data/Serien/")
+dl_video_folder = expanduser("/data/Filme_input/sort_series.py/")
+other_files_dir = expanduser("/data/Serien_input/other files/")
 move_other_files = True
-too_less_numbers = expanduser("~/Downloads/TooLessNumbers/")
-too_many_numbers = expanduser("~/Downloads/TooManyNumbers/")
-series_unknown = expanduser("~/Downloads/SeriesUnknown/")
+too_less_numbers = expanduser("/data/Serien_input/too less numbers/")
+too_many_numbers = expanduser("/data/Serien_input/too many numbers/")
+series_unknown = expanduser("/data/Serien_input/series unknown/")
+tmp_folder = expanduser("/tmp/")
 
-conversation_dict = {}
-conversation_dict2 = {}
+conversation_dict = {} #Search-strings
+conversation_dict2 = {} #Title
+conversation_dict3 = {} #Film
 conversation_dict["battlestar"] = 0
 conversation_dict["battelstar"] = 0
 conversation_dict["battlestard"] = 0
@@ -38,17 +40,21 @@ conversation_dict["galactica"] = 0
 conversation_dict["bsg"] = 0
 conversation_dict["bg"] = 0
 conversation_dict2[0] = "Battlestar Galactica"
+conversation_dict3[0] = "film"
 conversation_dict["dex"] = 1
 conversation_dict["dexter"] = 1
 conversation_dict2[1] = "Dexter"
+conversation_dict3[1] = "film"
 conversation_dict["vd"] = 2
 conversation_dict["tvd"] = 2
 conversation_dict["vampire"] = 2
 conversation_dict["diaries"] = 2
 conversation_dict["vampdiar"] = 2
 conversation_dict2[2] = "Vampire Diaries, The"
+conversation_dict3[2] = "film"
 conversation_dict["moonlight"] = 3
 conversation_dict2[3] = "Moonlight"
+conversation_dict3[3] = "film"
 conversation_dict["adad"] = 4
 conversation_dict["itgad"] = 4
 conversation_dict["americandad"] = 4
@@ -57,16 +63,21 @@ conversation_dict["ad"] = 4
 conversation_dict["dad"] = 4
 conversation_dict["american"] = 4
 conversation_dict2[4] = "American Dad"
+conversation_dict3[4] = "animation"
 conversation_dict["wire"] = 5
 conversation_dict2[5] = "Wire, The"
+conversation_dict3[5] = "film"
 conversation_dict["fringe"] = 6
 conversation_dict2[6] = "Fringe"
+conversation_dict3[6] = "film"
 conversation_dict["universe"] = 7
 conversation_dict["sgu"] = 7
 conversation_dict2[7] = "Stargate Universe"
+conversation_dict3[7] = "film"
 conversation_dict["mentalist"] = 8
 conversation_dict["jane"] = 8
 conversation_dict2[8] = "Mentalist, The"
+conversation_dict3[8] = "film"
 conversation_dict["true"] = 9
 conversation_dict["blood"] = 9
 conversation_dict["tb"] = 9
@@ -74,64 +85,84 @@ conversation_dict["tblood"] = 9
 conversation_dict["trueblood"] = 9
 conversation_dict["truebloodxvid"] = 9
 conversation_dict2[9] = "True Blood"
+conversation_dict3[9] = "film"
 conversation_dict["detektiv"] = 10
 conversation_dict["conan"] = 10
 conversation_dict2[10] = "Detektiv Conan"
+conversation_dict3[10] = "animation"
 conversation_dict["homer"] = 11
 conversation_dict["simpsons"] = 11
 conversation_dict2[11] = "Simpsons, The"
+conversation_dict3[11] = "animation"
 conversation_dict["fear"] = 12
 conversation_dict["itself"] = 12
 conversation_dict2[12] = "Fear Itself"
+conversation_dict3[12] = "film"
 conversation_dict["futu"] = 13
 conversation_dict["futurama"] = 13
 conversation_dict2[13] = "Futurama"
+conversation_dict3[13] = "animation"
 conversation_dict["numbers"] = 14
 conversation_dict["numb3rs"] = 14
 conversation_dict["numbrs"] = 14
 conversation_dict2[14] = "Numb3rs"
+conversation_dict3[14] = "film"
 conversation_dict["band"] = 15
 conversation_dict["brother"] = 15
 conversation_dict2[15] = "Band of Brother"
+conversation_dict3[15] = "film"
 conversation_dict["house"] = 16
 conversation_dict["hous"] = 16
 conversation_dict["drh"] = 16
 conversation_dict["drhouse"] = 16
 conversation_dict2[16] = "Dr. House"
+conversation_dict3[16] = "film"
 conversation_dict["happy"] = 17
 conversation_dict["tree"] = 17
 conversation_dict2[17] = "Happy Tree Friends"
+conversation_dict3[17] = "film"
 conversation_dict["eureka"] = 18
 conversation_dict["eur"] = 18
 conversation_dict2[18] = "EUReKA"
+conversation_dict3[18] = "film"
 conversation_dict["men"] = 19
 conversation_dict["twoandahalfmen"] = 19
 conversation_dict2[19] = "Two and a Half Men"
+conversation_dict3[19] = "film"
 conversation_dict["bn"] = 20
 conversation_dict["burn"] = 20
 conversation_dict["burnnotice"] = 20
 conversation_dict2[20] = "Burn Notice"
+conversation_dict3[20] = "film"
 conversation_dict["atlantis"] = 21
 conversation_dict2[21] = "Stargate Atlantis"
+conversation_dict3[21] = "film"
 conversation_dict["sgeins"] = 22
 conversation_dict2[22] = "Stargate SG1"
+conversation_dict3[22] = "film"
 conversation_dict["kino"] = 23
 conversation_dict2[23] = "Stargate Universe - Kino"
-conversation_dict["unit"] = 26
-conversation_dict["unitrp"] = 26
-conversation_dict["tu"] = 26
-conversation_dict2[26] = "Unit, The"
-conversation_dict["haven"] = 25
-conversation_dict2[25] = "Haven"
+conversation_dict3[23] = "film"
 conversation_dict["family"] = 24
 conversation_dict["famguy"] = 24
 conversation_dict["fg"] = 24
 conversation_dict["familyguy"] = 24
 conversation_dict2[24] = "Family Guy"
+conversation_dict3[24] = "animation"
+conversation_dict["haven"] = 25
+conversation_dict2[25] = "Haven"
+conversation_dict3[25] = "film"
+conversation_dict["unit"] = 26
+conversation_dict["unitrp"] = 26
+conversation_dict["tu"] = 26
+conversation_dict2[26] = "Unit, The"
+conversation_dict3[26] = "film"
 conversation_dict["scrubs"] = 27
 conversation_dict2[27] = "Scrubs"
+conversation_dict3[27] = "film"
 conversation_dict["chaos"] = 28
 conversation_dict2[28] = "Chaos City"
+conversation_dict3[28] = "film"
 conversation_dict["bigbangtheory"] = 29
 conversation_dict["bumm"] = 29
 conversation_dict["tbbt"] = 29
@@ -142,81 +173,114 @@ conversation_dict["big"] = 29
 conversation_dict["bang"] = 29
 conversation_dict["tbbt"] = 29
 conversation_dict2[29] = "Big Bang Theory, The"
+conversation_dict3[29] = "film"
 conversation_dict["navicis"] = 30
 conversation_dict["navycis"] = 30
 conversation_dict["ncis"] = 30
 conversation_dict["navy"] = 30
 conversation_dict["cis"] = 30
 conversation_dict2[30] = "Navy CIS"
+conversation_dict3[30] = "film"
 conversation_dict["tos"] = 31
 conversation_dict2[31] = "Raumschiff Enterprise"
+conversation_dict3[31] = "film"
 conversation_dict["fallingskies"] = 32
 conversation_dict["falling"] = 32
 conversation_dict["skies"] = 32
 conversation_dict2[32] = "Falling Skies"
+conversation_dict3[32] = "film"
 conversation_dict["aeon"] = 33
 conversation_dict["flux"] = 33
 conversation_dict2[33] = "Aeon Flux"
+conversation_dict3[33] = "film"
 conversation_dict["v"] = 34
 conversation_dict2[34] = "V - Die Besucher"
+conversation_dict3[34] = "film"
 conversation_dict["hellsing"] = 35
 conversation_dict2[35] = "Hellsing"
+conversation_dict3[35] = "animation"
 conversation_dict["spartacus"] = 36
 conversation_dict["sparta"] = 36
 conversation_dict2[36] = "Spartacus"
+conversation_dict3[36] = "film"
 conversation_dict["soul"] = 37
 conversation_dict["eater"] = 37
 conversation_dict2[37] = "Soul Eater"
+conversation_dict3[37] = "film"
 conversation_dict["stromberg"] = 38
 conversation_dict2[38] = "Stromberg"
+conversation_dict3[38] = "film"
 conversation_dict["cowboy"] = 39
 conversation_dict["bebop"] = 39
 conversation_dict2[39] = "Cowboy Bebop"
+conversation_dict3[39] = "animation"
 conversation_dict["stv"] = 40
 conversation_dict["voya"] = 40
 conversation_dict2[40] = "Star Trek Voyager"
+conversation_dict3[40] = "film"
 conversation_dict["enterprise"] = 41
 conversation_dict2[41] = "Star Trek Enterprise"
+conversation_dict3[41] = "film"
 conversation_dict["got"] = 42
 conversation_dict["gamethrones"] = 42
 conversation_dict["thrones"] = 42
 conversation_dict2[42] = "Game of Thrones"
+conversation_dict3[42] = "film"
 conversation_dict["tng"] = 43
 conversation_dict2[43] = "Star Trek The Next Generation"
+conversation_dict3[43] = "film"
 conversation_dict["continuum"] = 44
 conversation_dict2[44] = "Continuum"
+conversation_dict3[44] = "film"
 conversation_dict["prisoner"] = 45
 conversation_dict2[45] = "Prisoner, The"
+conversation_dict3[45] = "film"
 conversation_dict["mother"] = 46
 conversation_dict["himym"] = 46
 conversation_dict["swarley"] = 46
 conversation_dict2[46] = "How I Met Your Mother"
+conversation_dict3[46] = "film"
 conversation_dict["anarchy"] = 47
 conversation_dict["sons"] = 47
 conversation_dict["sofsoa"] = 47
 conversation_dict2[47] = "Sons Of Anarchy"
+conversation_dict3[47] = "film"
 conversation_dict["vik"] = 48
 conversation_dict["viki"] = 48
 conversation_dict2[48] = "Vikings"
+conversation_dict3[48] = "film"
 conversation_dict["breaking"] = 49
 conversation_dict["breakingbad"] = 49
 conversation_dict2[49] = "Breaking Bad"
+conversation_dict3[49] = "film"
 conversation_dict["upon"] = 50
 conversation_dict2[50] = "Once Upon a Time"
+conversation_dict3[50] = "film"
 conversation_dict["dead"] = 51
 conversation_dict2[51] = "Dead Like Me"
+conversation_dict3[51] = "film"
 conversation_dict["ddvb"] = 52
 conversation_dict2[52] = "Drachenreiter von Berk, Die"
+conversation_dict3[52] = "animation"
 conversation_dict["lostgirl"] = 53
 conversation_dict2[53] = "Lost Girl"
+conversation_dict3[53] = "film"
+conversation_dict["arrow"] = 54
+conversation_dict2[54] = "Arrow"
+conversation_dict3[54] = "film"
 
-remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
+remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "X264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
 seperators = ["_", " ", ".", "-", ","]
 try:
 	os.chdir(download_dir)
 except FileNotFoundError:
-	print("Error: Download-Directory not found")
+	print("Error: Download-directory not found")
 	exit(1)
+
+def ensure_dir(f):
+    d = os.path.dirname(f)
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 def FixString(str):
 	out = str
@@ -226,24 +290,60 @@ def FixString(str):
 		if out.endswith(rem_str):
 			out = out[:len(out)-len(rem_str)]
 	return out
+
+def checkMKV(sMkvInfo_txt):
+	found = 0
+	for line in sMkvInfo_txt.split("\n"):
+		if line.startswith("|  + Codec-ID:") and "A_VORBIS" in line:
+			found+=1
+		if line.startswith("|   + Abtastrate:") and "32000" in line:
+			found+=1
+	if (found % 2) == 0 and found != 0:
+		return 0
+	return 1
 	
-def mkvIt(new_filename_, file):
-	return os.system('mkvmerge -q -o "'+output_folder+new_filename_+'" --title "'+new_filename_[:-4]+'" --default-language de -B -T --no-chapters -M --no-global-tags --priority lower "'+file+'"')
-	
-def ffmpegConvertIt(file, file_, new_file):
+def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune): 
+	# bMKV        - sets true to mkvinfo it, do not transcode if already transcoded
+	# sInputFile  - Input filename
+	# sTune       - Film or Animation Seriestype
+	# sTitle      - The Title of the Series -> Output Filename + .mkv
+	needTranscode = 0
+	tmpFilename = sInputFile + "_ffmpg"
+	outputPath = tmp_folder+sTitle+".mkv"
 	try:
-		shutil.move(file, file_)
+		shutil.move(sInputFile, tmpFilename)
 	except:
-		print("rename "+file+" to "+file_+" failed")
-		return 999
-	cmd = [ffmpeg,"-i",file_,"-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", new_file]
+		print("Error: Renaming "+sInputFile+" to "+tmpFilename+" failed")
+		return [999, tmpFilename, ""]
+	
+	cmd1 = [ffmpeg, "-i", tmpFilename, "-y", "-vcodec", "libx264", "-crf", "24", "-preset", "slow", "-tune", sTune, \
+			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "matroska", \
+			"-metadata", 'title="'+sTitle+'"', outputPath]
+	cmd2 = [ffmpeg,"-i",tmpFilename, "-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", "-metadata", 'title="'+sTitle+'"', "-f", "matroska", outputPath]
+	
+	if bMKV:
+		try:
+			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
+		except CalledProcessError:
+			return [998, tmpFilename, ""]
+	#FIXME
+	#needTranscode = 0
+	if needTranscode:
+		cmd = cmd1
+		print("   Transcoding A/V-Data with ffmpeg, this might take some while...")
+	else:
+		print("   Remuxing with ffmpeg to mkv")
+		cmd = cmd2
 	try:
 		check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
 	except CalledProcessError as e:
-		print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
-		return e.returncode
+		if needTranscode:
+			print("Error: While doing FFMPEG-Transcoding, return code: '"+str(e.returncode)+"'")
+		else:
+			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
+		return [e.returncode, tmpFilename, ""]
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
-	return 0
+	return [0, tmpFilename, outputPath]
 	
 first_time_loop = 1
 while True:
@@ -267,6 +367,8 @@ while True:
 	tmpint = 0
 	next_word = ""
 	words = []
+	bIsAnMkvInputFile = False
+	TuneProfile = "film"
 
 	#print("read download directory")
 	files = os.listdir(os.getcwd())
@@ -297,6 +399,7 @@ while True:
 		elif file[-4:].lower() == ".ogm":
 			new_filename[8] = "ogm"
 		elif file[-4:].lower() == ".mkv":
+			bIsAnMkvInputFile = True
 			new_filename[8] = "mkv"
 		elif file[-4:].lower() == ".mp4":
 			new_filename[8] = "mp4"
@@ -325,7 +428,7 @@ while True:
 		elif file[-5] == ".":
 			skip_file = True
 		elif isfile(file):
-			print(" - no filetype detected, use AVI - should not happend!")
+			print("Warning: no filetype detected, use AVI - should not happen!")
 			new_filename[8] = "avi"
 		else: #folder
 			continue
@@ -335,10 +438,11 @@ while True:
 		if skip_file:
 			if move_other_files:
 				try:
-					print("moving file '"+str(file)+"' to 'other files'")
+					print("Info: No usable file-extension found, moving file '"+str(file)+"' to 'other files'")
+					ensure_dir(other_files_dir+file)
 					shutil.move(file, other_files_dir+file)
 				except:
-					print("ERROR: Can't move file '"+str(file)+"'")
+					print("Error: Can't move file '"+str(file)+"'")
 					pass
 			continue
 		
@@ -470,7 +574,8 @@ while True:
 		.replace("S1 S01E", "01") \
 		.replace("S1 S02E", "02") \
 		.replace("S1 S03E", "03") \
-		.replace("3D", "_")
+		.replace("3D", "_") \
+		.replace(".108-pretail.", ".")
 		for char in fn:
 			try:
 				tmpint = int(char)
@@ -507,7 +612,8 @@ while True:
 		
 		if counter > 4:
 			try:
-				print("too many numbers in filename, moving file '"+str(file)+"' to 'too many numbers'")
+				print("Info: Too many numbers in filename, moving file '"+str(file)+"' to 'too many numbers'")
+				ensure_dir(too_many_numbers+file)
 				shutil.move(file, too_many_numbers+file)	
 			except:
 				pass
@@ -515,7 +621,8 @@ while True:
 		
 		elif counter == 0:
 			try:
-				print("error while parsing episode/season, moving file '"+str(file)+"' to 'Filme'")
+				print("Info: No episode/season found, moving file '"+str(file)+"' to 'Filme'")
+				ensure_dir(dl_video_folder+file)
 				shutil.move(file, dl_video_folder+file)
 			except:
 				pass
@@ -523,7 +630,8 @@ while True:
 			
 		elif counter == 1:
 			try:
-				print("too less numbers in filename, moving file '"+str(file)+"' to 'too less numbers'")
+				print("Info: Too less numbers in filename, moving file '"+str(file)+"' to 'too less numbers'")
+				ensure_dir(too_less_numbers+file)
 				shutil.move(file, too_less_numbers+file)
 			except:
 				pass
@@ -552,11 +660,16 @@ while True:
 		for word in words:
 			if word.lower() in conversation_dict:
 				new_filename[0] = conversation_dict2[conversation_dict[word.lower()]]
+				try:
+					TuneProfile = conversation_dict3[conversation_dict[word.lower()]]
+				except:
+					pass
 				found = True
 				break
 		if not found:
 			try:
-				print("Series unknown, moving file '"+str(file)+"' to series unknown")
+				print("Info: Series unknown, moving file '"+str(file)+"' to series unknown")
+				ensure_dir(series_unknown+file)
 				shutil.move(file, series_unknown+file)
 			except:
 				pass
@@ -565,66 +678,61 @@ while True:
 		#mkv it
 		new_filename[-1] = "mkv"
 		
-		new_filename_ = ""
-		for string in new_filename:
-			new_filename_ += string
+		FileTitle = ""
+		for string in new_filename[0:-2]:
+			FileTitle += string
+			
+		print("'"+str(file)+"' to '"+str(FileTitle+".mkv")+"'")
 		
-		tmp_int = 2
-		if isfile(output_folder+new_filename_):
-			print("WARNING: Output File Exists '"+str(new_filename_)+"'")
-			while tmp_int < 100:
-				new_filename_tmp = new_filename_[:-4]+"_"+str(tmp_int)+new_filename_[-4:]
-				if isfile(output_folder+new_filename_tmp):
-					print("WARNING: Output File Exists '"+str(new_filename_)+"'")
-					tmp_int+=1
-				else:
-					new_filename_ = new_filename_tmp
-					break
-		print("'"+str(file)+"' to '"+str(new_filename_)+"'")
+		ffmpeg_return = ffmpegConvertIt(bIsAnMkvInputFile, file, FileTitle, TuneProfile)
 		
-		new_file = file+".avi"
-		print("   Remuxing with ffmpeg")
+		input_file=ffmpeg_return[1]
+		tmp_file=ffmpeg_return[2]
 		
-		tmp_file = file+"_ffmpg"
-		
-		returnvalue = ffmpegConvertIt(file, tmp_file, new_file)
-		
-		if returnvalue == 0:
+		if ffmpeg_return[0] == 0:
 			print("     Done.")
+			print("   Moving file from temp-location to series-folder...")
+			
+			output_folder_ = output_folder+str(new_filename[0])+'/'+str(new_filename[0])+' S'+str(new_filename[2])+str(new_filename[3])+'/'
+			output_file=output_folder_+FileTitle+".mkv"
+			
+			#test if file already exists:
+			if isfile(output_file):
+				print("Warning: Output File Exists '"+output_file+"'")
+				for tmp_int in range(2,100):
+					test_filename=output_folder_+FileTitle+"_"+str(tmp_int)+".mkv"
+					if isfile(test_filename):
+						print("Warning: Output File Exists '"+test_filename+"'")
+					else:
+						output_file = test_filename
+						break	
+			#moving file, deleting input	
 			try:
-				os.remove(tmp_file)
-			except:
-				print("can't delete inputfile '"+str(tmp_file)+"' after remuxing with ffmpeg")
-				continue
-			
-			file = new_file
-			
-			print("   Remuxing with mkvmerge")
-			
-			if mkvIt(new_filename_, file) == 0:
+				ensure_dir(output_file)
+				shutil.move(tmp_file, output_file)
 				print("     Done.")
+			except:
 				try:
-					os.remove(file)
-				except:
-					try:
-						shutil.move(file, new_filename_+".old")
-					except:
-						print("can't delete or move inputfile after remuxing '"+str(file)+"'")
-			else:
-				print("mkvmerge crashed on file '"+str(file)+"'")
-				try:
-					shutil.move(file, file+"_crash")
+					os.remove(output_file)
 				except:
 					pass
-		elif returnvalue == 999:
-			print("removed from queue, retry on rescan")
-		else:
-			print("ffmpeg crashed on file '"+str(file)+"'")
+				print("Error: can't move file '"+tmp_file+"' to output location '"+output_file+"', leaving it on temp-location")
+				continue
 			try:
-				shutil.move(file, file+"_crash")
+				print("   Removing input-file...")
+				os.remove(input_file)
+				print("     Done.")
+			except:
+				print("Error: can't delete inputfile '"+str(input_file)+"' after reading with ffmpeg")
+				continue
+		elif ffmpeg_return[0] == 999:
+			print("Warning: Removed from queue, retry on rescan")
+		else:
+			print("Error: ffmpeg crashed on file '"+str(file)+"'")
+			try:
+				shutil.move(input_file, file+"_crash")
 			except:
 				pass
-
 		
 	#print("Strg+C to cancel - sleeping for 5 sec")
 	sleep(5)
