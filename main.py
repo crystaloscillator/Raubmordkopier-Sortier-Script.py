@@ -601,7 +601,7 @@ while True:
 		.replace("stream2", "stream zwei") \
 		.replace("720i", "_") \
 		.replace("720p", "_") \
-		.replace("420p", "_") \
+		.replace("480p", "_") \
 		.replace("720", "_") \
 		.replace("1080i", "_") \
 		.replace("1080p", "_") \
