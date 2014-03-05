@@ -280,6 +280,7 @@ conversation_dict3[55] = "film"
 conversation_dict["marvels"] = 56
 conversation_dict["marvel's"] = 56
 conversation_dict["agents"] = 56
+conversation_dict["shield"] = 56
 conversation_dict2[56] = "Marvel's Agents of S.H.I.E.L.D."
 conversation_dict3[56] = "film"
 conversation_dict["theamericans"] = 57
