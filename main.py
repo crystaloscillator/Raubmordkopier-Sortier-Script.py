@@ -396,7 +396,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			print("Error: While doing FFMPEG-Transcoding, return code: '"+str(e.returncode)+"'")
 		else:
 			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
-		return [e.returncode, tmpFilename, ""]
+		return [e.returncode, tmpFilename, "", MuxToMkv]
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
 	return [0, tmpFilename, outputPath, MuxToMkv]
 	
