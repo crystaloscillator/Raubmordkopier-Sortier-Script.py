@@ -794,7 +794,7 @@ while True:
 		elif ffmpeg_return[0] == 999:
 			print("Warning: Removed from queue, retry on rescan")
 		else:
-			print("Error: ffmpeg crashed on file '"+str(file)+"' with errorcode '"+str(ffmpeg_return[0])"'")
+			print("Error: ffmpeg crashed on file '"+str(file)+"' with errorcode '"+str(ffmpeg_return[0])+"'")
 			try:
 				shutil.move(input_file, file+"_crash")
 			except:
