@@ -140,6 +140,7 @@ conversation_dict["atlantis"] = 21
 conversation_dict2[21] = "Stargate Atlantis"
 conversation_dict3[21] = "film"
 conversation_dict["sgeins"] = 22
+conversation_dict["sg1"] = 22
 conversation_dict2[22] = "Stargate SG1"
 conversation_dict3[22] = "film"
 conversation_dict["kino"] = 23
@@ -184,7 +185,7 @@ conversation_dict["cis"] = 30
 conversation_dict2[30] = "Navy CIS"
 conversation_dict3[30] = "film"
 conversation_dict["tos"] = 31
-conversation_dict2[31] = "Raumschiff Enterprise"
+conversation_dict2[31] = "Raumschiff Enterprise [tos]"
 conversation_dict3[31] = "film"
 conversation_dict["fallingskies"] = 32
 conversation_dict["falling"] = 32
@@ -218,10 +219,10 @@ conversation_dict2[39] = "Cowboy Bebop"
 conversation_dict3[39] = "animation"
 conversation_dict["stv"] = 40
 conversation_dict["voya"] = 40
-conversation_dict2[40] = "Star Trek Voyager"
+conversation_dict2[40] = "Star Trek Voyager [stv]"
 conversation_dict3[40] = "film"
-conversation_dict["enterprise"] = 41
-conversation_dict2[41] = "Star Trek Enterprise"
+conversation_dict["ent"] = 41
+conversation_dict2[41] = "Star Trek Enterprise [ent]"
 conversation_dict3[41] = "film"
 conversation_dict["got"] = 42
 conversation_dict["gamethrones"] = 42
@@ -229,7 +230,7 @@ conversation_dict["thrones"] = 42
 conversation_dict2[42] = "Game of Thrones"
 conversation_dict3[42] = "film"
 conversation_dict["tng"] = 43
-conversation_dict2[43] = "Star Trek The Next Generation"
+conversation_dict2[43] = "Star Trek The Next Generation [tng]"
 conversation_dict3[43] = "film"
 conversation_dict["continuum"] = 44
 conversation_dict2[44] = "Continuum"
@@ -308,9 +309,16 @@ conversation_dict["berk"] = 63
 conversation_dict["drachenreiter"] = 63
 conversation_dict2[63] = "Drachenreiter von Berk, Die"
 conversation_dict3[63] = "animation"
+conversation_dict["walking"] = 64
+conversation_dict["twd"] = 64
+conversation_dict["thewalkingdead"] = 64
+conversation_dict2[55] = "Walking Dead, The"
+conversation_dict3[55] = "film"
 
-remove_strings = ["dxvid", "xvid", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
-seperators = ["_", " ", ".", "-", ","]
+
+remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "X264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
+seperators = ["_", " ", ".", "-", ",", "(", ")", "[", "]"]
+
 try:
 	os.chdir(download_dir)
 except FileNotFoundError:
