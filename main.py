@@ -350,6 +350,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	needTranscode = 0
 	tmpFilename = sInputFile + "_ffmpg"
 	outputPath = tmp_folder+sTitle+".mkv"
+	MuxToMkv = False
 	try:
 		shutil.move(sInputFile, tmpFilename)
 	except:
