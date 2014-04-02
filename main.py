@@ -507,7 +507,7 @@ while True:
 		#seperate strings
 		next_word = ""
 		words = []
-		fn = file.replace("S0", ".").replace("S1", ".").replace("S2", ".").replace("s0", ".").replace("s1", ".").replace("s2", ".").replace("numb3rs", "numbers").replace("Numb3rs", "numbers").replace("AC3", "").replace("sg1", "sgeins").replace("SG1", "sgeins").replace("crow_s", "scrubs").replace("SC_", "scrubs_").replace("crow-s", "scrubs_").replace("720p", " ").replace("x264", " ").replace("gtvg-fr", "fringe").replace("futu", "futurama ").replace("lost.girl", "lostgirl").replace("gu10conti2", "continuum 02x").replace("gu10conti3", "continuum 03x").replace("gu10conti1", "continuum 01x").replace("gu10conti4", "continuum 04x")
+		fn = file.replace("S0", ".").replace("S1", ".").replace("S2", ".").replace("s0", ".").replace("s1", ".").replace("s2", ".").replace("numb3rs", "numbers").replace("Numb3rs", "numbers").replace("AC3", "").replace("sg1", "sgeins").replace("SG1", "sgeins").replace("crow_s", "scrubs").replace("SC_", "scrubs_").replace("crow-s", "scrubs_").replace("720p", " ").replace("x264", " ").replace("gtvg-fr", "fringe").replace("futu", "futurama ").replace("lost.girl", "lostgirl").replace("gu10conti2", "continuum 02x").replace("gu10conti3", "continuum 03x").replace("gu10conti1", "continuum 01x").replace("gu10conti4", "continuum 04x").replace("-2brokegirls-", "-twobrokegirls-")
 		fn = fn.replace("0", " ").replace("1", " ").replace("2", " ").replace("3", " ").replace("4", " ").replace("5", " ").replace("6", " ").replace("7", " ").replace("8", " ").replace("9", " ").replace("Teil.2", "_").replace("teil.2", "_").replace("Teil2", "_").replace("teil2", "_").replace("Teil.2", "_").replace("Teil.1", "_").replace("teil.1", "_").replace("Teil1", "_").replace("teil1", "_").replace("Teil.1", "_")
 		for char in fn:
 			if char in seperators:
@@ -566,6 +566,7 @@ while True:
 		.replace("homer25", "homer 25x") \
 		.replace("homer26", "homer 26x") \
 		.replace("homer27", "homer 27x") \
+		.replace("-2brokegirls-", "-twobrokegirls-") \
 		.replace("720p", " ") \
 		.replace("x264", " ") \
 		.replace("X264", " ") \
