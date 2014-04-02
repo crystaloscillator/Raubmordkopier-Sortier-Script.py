@@ -358,6 +358,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	needTranscode = 0
 	tmpFilename = sInputFile + "_ffmpg"
 	outputPath = tmp_folder+sTitle+".mkv"
+	MuxToMkv = False
 	try:
 		shutil.move(sInputFile, tmpFilename)
 	except:
@@ -375,11 +376,16 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
 		except CalledProcessError:
 			return [998, tmpFilename, ""]
-	#FIXME
-	#needTranscode = 0
+	else: #going to mkv it first
+		MuxToMkv = True
+		
 	if needTranscode:
 		cmd = cmd1
 		print("   Transcoding A/V-Data with ffmpeg, this might take some while...")
+	elif MuxToMkv:
+		cmd = cmd2
+		cmd[-1] = sInputFile+".mkv"
+		print("   Remuxing with ffmpeg to mkv to input-folder")
 	else:
 		print("   Remuxing with ffmpeg to mkv")
 		cmd = cmd2
@@ -392,7 +398,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
 		return [e.returncode, tmpFilename, ""]
 	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
-	return [0, tmpFilename, outputPath]
+	return [0, tmpFilename, outputPath, MuxToMkv]
 	
 first_time_loop = 1
 while True:
@@ -755,36 +761,38 @@ while True:
 		
 		input_file=ffmpeg_return[1]
 		tmp_file=ffmpeg_return[2]
+		JustMkvIt = ffmpeg_return[3]
 		
 		if ffmpeg_return[0] == 0:
 			print("     Done.")
-			print("   Moving file from temp-location to series-folder...")
-			
-			output_folder_ = output_folder+str(new_filename[0])+'/'+str(new_filename[0])+' S'+str(new_filename[2])+str(new_filename[3])+'/'
-			output_file=output_folder_+FileTitle+".mkv"
-			
-			#test if file already exists:
-			if isfile(output_file):
-				print("Warning: Output File Exists '"+output_file+"'")
-				for tmp_int in range(2,100):
-					test_filename=output_folder_+FileTitle+"_"+str(tmp_int)+".mkv"
-					if isfile(test_filename):
-						print("Warning: Output File Exists '"+test_filename+"'")
-					else:
-						output_file = test_filename
-						break	
-			#moving file, deleting input	
-			try:
-				ensure_dir(output_file)
-				shutil.move(tmp_file, output_file)
-				print("     Done.")
-			except:
+			if not JustMkvIt:
+				print("   Moving file from temp-location to series-folder...")
+				
+				output_folder_ = output_folder+str(new_filename[0])+'/'+str(new_filename[0])+' S'+str(new_filename[2])+str(new_filename[3])+'/'
+				output_file=output_folder_+FileTitle+".mkv"
+				
+				#test if file already exists:
+				if isfile(output_file):
+					print("Warning: Output File Exists '"+output_file+"'")
+					for tmp_int in range(2,100):
+						test_filename=output_folder_+FileTitle+"_"+str(tmp_int)+".mkv"
+						if isfile(test_filename):
+							print("Warning: Output File Exists '"+test_filename+"'")
+						else:
+							output_file = test_filename
+							break	
+				#moving file, deleting input	
 				try:
-					os.remove(output_file)
+					ensure_dir(output_file)
+					shutil.move(tmp_file, output_file)
+					print("     Done.")
 				except:
-					pass
-				print("Error: can't move file '"+tmp_file+"' to output location '"+output_file+"', leaving it on temp-location")
-				continue
+					try:
+						os.remove(output_file)
+					except:
+						pass
+					print("Error: can't move file '"+tmp_file+"' to output location '"+output_file+"', leaving it on temp-location")
+					continue
 			try:
 				print("   Removing input-file...")
 				os.remove(input_file)
@@ -795,7 +803,7 @@ while True:
 		elif ffmpeg_return[0] == 999:
 			print("Warning: Removed from queue, retry on rescan")
 		else:
-			print("Error: ffmpeg crashed on file '"+str(file)+"'")
+			print("Error: ffmpeg crashed on file '"+str(file)+"' with errorcode '"+str(ffmpeg_return[0])+"'")
 			try:
 				shutil.move(input_file, file+"_crash")
 			except:
