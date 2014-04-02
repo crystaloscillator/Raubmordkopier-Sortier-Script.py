@@ -367,7 +367,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
 		except CalledProcessError:
 			return [998, tmpFilename, ""]
-	else #going to mkv it first
+	else: #going to mkv it first
 		MuxToMkv = True
 		
 	if needTranscode:
