@@ -370,7 +370,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 		shutil.move(sInputFile, tmpFilename)
 	except:
 		print("Error: Renaming "+sInputFile+" to "+tmpFilename+" failed")
-		return [999, tmpFilename, ""]
+		return [999, tmpFilename, "", MuxToMkv]
 	
 	cmd1 = [ffmpeg, "-i", tmpFilename, "-y", "-vcodec", "libx264", "-crf", "24", "-preset", "slow", "-tune", sTune, \
 			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "matroska", \
@@ -382,7 +382,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 		try:
 			needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
 		except CalledProcessError:
-			return [998, tmpFilename, ""]
+			return [998, tmpFilename, "", MuxToMkv]
 	else: #going to mkv it first
 		MuxToMkv = True
 		
