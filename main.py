@@ -21,6 +21,7 @@ from os.path import expanduser
 download_dir = expanduser("/data/Serien_input/")
 ffmpeg = "ffmpeg"
 mkvinfo = "mkvinfo"
+mkvmerge = "mkvmerge"
 output_folder = expanduser("/data/Serien/")
 dl_video_folder = expanduser("/data/Filme_input/sort_series.py/")
 other_files_dir = expanduser("/data/Serien_input/other files/")
@@ -376,6 +377,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			"-movflags", "+faststart", "-acodec", "libvorbis", "-qscale:a", "0", "-ar", "32000", "-scodec", "copy", "-f", "matroska", \
 			"-metadata", 'title="'+sTitle+'"', outputPath]
 	cmd2 = [ffmpeg,"-i",tmpFilename, "-y","-vcodec", "copy","-acodec","copy", "-scodec", "copy", "-metadata", 'title="'+sTitle+'"', "-f", "matroska", outputPath]
+	cmd3 = [mkvmerge, "-q", "--title", sTitle, "--default-language", "de", "-B", "-T", "--no-chapters", "-M", "--no-global-tags", "--priority", "lower", tmpFilename, "-o", outputPath]
 	
 	if bMKV:
 		print("Debug: This is an mkv, running mkvinfo...")
@@ -396,16 +398,31 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 	else:
 		print("   Remuxing with ffmpeg to mkv")
 		cmd = cmd2
+	errorcode = -1
+	crashed = 0
 	try:
 		check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
 	except CalledProcessError as e:
+		crashed = 1
+		errorcode = e.returncode
 		if needTranscode:
 			print("Error: While doing FFMPEG-Transcoding, return code: '"+str(e.returncode)+"'")
 		else:
-			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"'")
-		return [e.returncode, tmpFilename, "", MuxToMkv]
-	#win32process.SetPriorityClass(p, win32process.BELOW_NORMAL_PRIORITY_CLASS) #win32process.IDLE_PRIORITY_CLASS
-	return [0, tmpFilename, outputPath, MuxToMkv]
+			print("Error: While doing FFMPEG-Copy, return code: '"+str(e.returncode)+"', try to remux with mkvmerge")
+	if not needTranscode and crashed:
+		cmd = cmd3
+		try:
+			check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+			print("Debug: Successfully remuxed to mkv with mkvmerge")
+			crashed = 0
+		except CalledProcessError as e:
+			errorcode = e.returncode
+			print("Error: While doing mkvmerge-Copy, return code: '"+str(e.returncode)+"'")
+			
+	if crashed:	
+		return [errorcode, tmpFilename, "", MuxToMkv]
+	else
+		return [0, tmpFilename, outputPath, MuxToMkv]
 	
 first_time_loop = 1
 while True:
@@ -811,7 +828,7 @@ while True:
 		elif ffmpeg_return[0] == 999:
 			print("Warning: Removed from queue, retry on rescan")
 		else:
-			print("Error: ffmpeg crashed on file '"+str(file)+"' with errorcode '"+str(ffmpeg_return[0])+"'")
+			print("Error: process crashed on file '"+str(file)+"' with errorcode '"+str(ffmpeg_return[0])+"'")
 			try:
 				shutil.move(input_file, file+"_crash")
 			except:
