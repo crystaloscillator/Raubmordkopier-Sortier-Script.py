@@ -18,7 +18,7 @@ from os.path import isfile
 from subprocess import CalledProcessError, check_call, DEVNULL, check_output, STDOUT
 from os.path import expanduser
 
-download_dir = expanduser("/data/Serien_input/")
+download_dir = expanduser("~/.jdownloader/downloads/")
 ffmpeg = "ffmpeg"
 mkvinfo = "mkvinfo"
 mkvmerge = "mkvmerge"
