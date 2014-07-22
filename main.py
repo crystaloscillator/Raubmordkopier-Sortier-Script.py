@@ -421,7 +421,7 @@ def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
 			
 	if crashed:	
 		return [errorcode, tmpFilename, "", MuxToMkv]
-	else
+	else:
 		return [0, tmpFilename, outputPath, MuxToMkv]
 	
 first_time_loop = 1
