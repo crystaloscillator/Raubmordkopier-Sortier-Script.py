@@ -370,6 +370,7 @@ conversation_dict3[77] = "film"
 conversation_dict["birmingham"] = 78
 conversation_dict["blinders"] = 78
 conversation_dict["peaky"] = 78
+conversation_dict["peakyblinders"] = 78
 conversation_dict2[78] = "Peaky Blinders - Gangs of Birmingham"
 conversation_dict3[78] = "film"
 conversation_dict["pinky"] = 79
