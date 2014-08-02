@@ -381,6 +381,9 @@ conversation_dict["jeeves"] = 80
 conversation_dict["wooster"] = 80
 conversation_dict2[80] = "Jeeves and Wooster"
 conversation_dict3[80] = "film"
+conversation_dict["lost"] = 81
+conversation_dict2[81] = "Lost"
+conversation_dict3[81] = "film"
 
 remove_strings = ["dxvid", "xvid", "staffel", "episode", "the", "german", "ger", "intro", "ep", "avi", "divx", "flv", "ogm", "ac3", "0W4", "x264", "X264", "p0w4", "Prim3time", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "1080p", "720p"]
 seperators = ["_", " ", ".", "-", ",", "(", ")", "[", "]"]
