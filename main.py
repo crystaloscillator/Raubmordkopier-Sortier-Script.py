@@ -355,12 +355,14 @@ conversation_dict["supernatural"] = 74
 conversation_dict2[74] = "Supernatural"
 conversation_dict3[74] = "film"
 conversation_dict["followings"] = 75
+conversation_dict["following"] = 75
 conversation_dict2[75] = "Following, The"
 conversation_dict3[75] = "film"
 conversation_dict["americans"] = 76
 conversation_dict2[76] = "Americans, The"
 conversation_dict3[76] = "film"
 conversation_dict["juw"] = 77
+conversation_dict["blackadder"] = 77
 conversation_dict2[77] = "Blackadder"
 conversation_dict3[77] = "film"
 
