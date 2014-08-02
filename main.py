@@ -45,6 +45,7 @@ conversation_dict2[0] = "Battlestar Galactica"
 conversation_dict3[0] = "film"
 conversation_dict["dex"] = 1
 conversation_dict["dexter"] = 1
+conversation_dict["dextdvd"] = 1
 conversation_dict2[1] = "Dexter"
 conversation_dict3[1] = "film"
 conversation_dict["vd"] = 2
