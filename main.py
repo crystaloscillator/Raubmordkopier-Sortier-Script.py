@@ -266,6 +266,7 @@ conversation_dict["deadlike"] = 51
 conversation_dict["deadlikeme"] = 51
 conversation_dict["like"] = 51
 conversation_dict["dlm"] = 51
+conversation_dict["sgwt"] = 51
 conversation_dict2[51] = "Dead Like Me"
 conversation_dict3[51] = "film"
 conversation_dict["ddvb"] = 52
