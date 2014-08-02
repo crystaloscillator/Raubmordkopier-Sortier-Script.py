@@ -263,6 +263,7 @@ conversation_dict["onceupon"] = 50
 conversation_dict2[50] = "Once Upon a Time"
 conversation_dict3[50] = "film"
 conversation_dict["deadlike"] = 51
+conversation_dict["deadlikeme"] = 51
 conversation_dict["like"] = 51
 conversation_dict["dlm"] = 51
 conversation_dict2[51] = "Dead Like Me"
