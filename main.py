@@ -296,6 +296,7 @@ conversation_dict2[58] = "Sleepy Hollow"
 conversation_dict3[58] = "film"
 conversation_dict["person"] = 59
 conversation_dict["interest"] = 59
+conversation_dict["poi"] = 59
 conversation_dict2[59] = "Person of Interest"
 conversation_dict3[59] = "film"
 conversation_dict["firefly"] = 60
