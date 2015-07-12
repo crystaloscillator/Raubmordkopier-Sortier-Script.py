@@ -613,6 +613,7 @@ while True:
 		.replace("AC3", "") \
 		.replace("sg1", "sgeins") \
 		.replace("SG1", "sgeins") \
+		.replace("G.o.T.", "gamethrones") \
 		.replace("-101.", "-01_01.") \
 		.replace("-102.", "-01_02.") \
 		.replace("-103.", "-01_03.") \
