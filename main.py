@@ -515,6 +515,7 @@ while True:
 	#print("got "+str(len(files))+" files")
 
 	for file in files:
+		bIsAnMkvInputFile = False
 		#print("Filename: '"+str(file)+"'...")
 		new_filename = ["dummyname"," ","0","0","x","0","0",".","ext"]
 		skip_file = False
