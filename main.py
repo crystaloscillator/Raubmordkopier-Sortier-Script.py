@@ -991,7 +991,8 @@ while True:
 		.replace("S1 S02E", "02") \
 		.replace("S1 S03E", "03") \
 		.replace("3D", "_") \
-		.replace(".108-pretail.", ".")
+		.replace(".108-pretail.", ".") \
+		.replace(".A3.", "Adrei")
 		for char in fn:
 			try:
 				tmpint = int(char)
