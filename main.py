@@ -160,7 +160,10 @@ class series_database:
 			print(e.message)
 			exit(100)
 		self.__preprocessor_searches.add(search)
-		self.__preprocessor.append(search, replace)
+		preprocessor = namedtuple('preprocessor', 'search replace')
+		preprocessor.search = search
+		preprocessor.replace = replace
+		self.__preprocessor.append(preprocessor)
 	
 	def __load_file(self, file_type: str) -> None:
 		"""
@@ -252,20 +255,48 @@ class series_database:
 			return False
 		elif filename[-3:].lower() == ".7z":  # skip silently
 			return False
-		elif filename[-3] == ".":
-			return False
-		elif filename[-4] == ".":
-			return False
-		elif filename[-5] == ".":
-			return False
-		elif isfile(file):
-			print("Warning: no filetype detected, use AVI - should not happen!")
-			new_filename[8] = "avi"
-		else:  # folder
-			continue
-			
+		return False  # is a non-detectable filetype or a folder
+	
+	def preprocessor(self, filename: str) -> str:
+		"""
+		:param filename: input filename
+		:return: returns preprocessed filename
+		"""
+		for preprocessor in self.__preprocessor:
+			filename = filename.replace(preprocessor.search, preprocessor.replace)
+		return filename
+	
+	def detect_series(self, filename: str, debug=False) -> int:
+		"""
+		:param filename: takes a string as input
+		:param debug: if true, we print a verbose output of the detection
+		:return: returns the number of the series according to the database keywords
+		"""
+		next_word = ""
+		words = []
+		for char in filename:
+			if char in self.__seperator:
+				if len(next_word) != 0:
+					words.append(next_word)
+					next_word = ""
+			else:
+				next_word += char
 		
-
+		found = []
+		for word in words:
+			try:
+				found.append(self.__db_keywords[word.lower()])
+			except KeyError:
+				pass
+		# distinct list
+		found = list(set(found))
+		
+		if len(found) == 1:
+			return found[0]
+		elif
+	
+	def detect_season_episode(self, filename: str) -> tuple:
+		pass
 
 if __name__ == "__main__":
 	input_path = "~/Downloads/"
@@ -296,13 +327,6 @@ if __name__ == "__main__":
 	no_exact_match = expanduser(no_exact_match)
 	tmp_folder = expanduser(tmp_folder)
 	
-	# FIXME: todo list #
-	
-	# Replaces und den Suchwörtern der Eintrag wieder richtig zugeordnet
-	
-	# remove_strings = #do an import here
-	# seperator = #do an import here
-	
 	print("Initialisation finished, reading database...", end='')
 	
 	db = series_database()
@@ -331,7 +355,7 @@ if __name__ == "__main__":
 	first_time__in_loop = 1
 	
 	while True:
-		output_filename = namedtuple('episode', 'name season episode file_extention')
+		output_filename = namedtuple('episode', 'name season episode file_extention tuning')
 		
 		input_filename = dir_reader.pop_filename()
 		if file is None:
@@ -339,6 +363,54 @@ if __name__ == "__main__":
 			sleep(5)
 			dir_reader.refresh()
 			continue
+		
+		if not db.valid_file(input_path):
+			if isfile(input_path + '/' + input_filename):
+				try:
+					print("Info: No usable file-extension found, moving file '" + str(file) + "' to 'other files'")
+					ensure_dir(other_files_dir + input_filename)
+					shutil.move(input_filename, other_files_dir + input_filename)
+				except:
+					print("Error: Can't move file '" + str(input_filename) + "'")
+				pass
+			continue
+		
+		try:
+			input_filename_preprocessed = db.preprocessor(input_filename)
+			series_number = db.detect_series(input_filename_preprocessed)
+			if series_number is None:
+				print("Info: Series unknown, moving file '" + str(file) + "' to series unknown")
+			# FIXME do stuff here
+			# try:
+			#	ensure_dir(series_unknown + file)
+			#	shutil.move(file, series_unknown + file)
+			# except:
+			#	pass
+			# continue
+			output_filename.name = db.get_name(series_number)  # FIXME method missing
+			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
+			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
+		
+		except IndexError as e:
+			print("detection of series not unique, moving file")
+			# old output: print("Info: No exact match found: " + str(found) + ", moving file '" + str(file) + "' to no
+			#  exact match")
+			# FIXME do stuff here:
+			# try:
+			#	ensure_dir(no_exact_match + file)
+			#	shutil.move(file, no_exact_match + file)
+			# except:
+			#	pass
+			continue
+		
+		except ValueError as e:
+			print("undetectable episode/series, moving file")
+		# FIXME do stuff here
+			
+		
+		
+		
+		
 		
 		# FIXME: Old stuff - really needed?
 		bIsAnMkvInputFile = False
