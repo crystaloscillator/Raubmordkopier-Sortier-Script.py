@@ -9,8 +9,11 @@
 # FIXME renumber the exits
 
 import os
-from os.path import abspath, expanduser
+import shutil
+from os.path import abspath, expanduser, isfile
+from subprocess import CalledProcessError, DEVNULL, STDOUT, check_call, check_output
 from time import sleep
+from collections import namedtuple
 
 
 def expand_and_ensure_path(rel_path: str) -> str:
@@ -214,11 +217,54 @@ class series_database:
 		self.__load_file("preprocessor")
 		self.__load_file("seperator")
 	
-	def valid_file(self, filename) -> bool:
+	def valid_file(self, filename: str) -> bool:
 		"""
-		:param filename:
-		:return:
+		:param filename: takes a filename
+		:return: returns if the files is valid for processing
 		"""
+		if not type(filename) == str:
+			return False
+		
+		if len(filename) < 5:
+			return False
+		if len(filename) >= 11:
+			if filename[-11:].lower() == ".crdownload":
+				return False
+			elif filename[-11:].lower() == "desktop.ini":
+				return False
+		
+		# ignore files like xxx.rar.001
+		try:
+			int(filename[-3:])
+			return False
+		except:
+			pass
+		
+		if filename[-4:].lower() in (".avi", ".ogm", ".mkv", ".mp4", ".flv"):
+			return True
+		elif filename[-5:].lower() in (".divx", ".webm"):
+			return True
+		elif filename[-5:].lower() in (".part", ".rar_"):
+			return False
+		elif filename[-6:].lower() in ("_crash", "_ffmpg"):  # skip silently
+			return False
+		elif filename[-4:].lower() in (".rar", ".old", ".zip"):  # skip silently
+			return False
+		elif filename[-3:].lower() == ".7z":  # skip silently
+			return False
+		elif filename[-3] == ".":
+			return False
+		elif filename[-4] == ".":
+			return False
+		elif filename[-5] == ".":
+			return False
+		elif isfile(file):
+			print("Warning: no filetype detected, use AVI - should not happen!")
+			new_filename[8] = "avi"
+		else:  # folder
+			continue
+			
+		
 
 
 if __name__ == "__main__":
@@ -285,7 +331,9 @@ if __name__ == "__main__":
 	first_time__in_loop = 1
 	
 	while True:
-		file = dir_reader.pop_filename()
+		output_filename = namedtuple('episode', 'name season episode file_extention')
+		
+		input_filename = dir_reader.pop_filename()
 		if file is None:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
 			sleep(5)
@@ -294,7 +342,6 @@ if __name__ == "__main__":
 		
 		# FIXME: Old stuff - really needed?
 		bIsAnMkvInputFile = False
-		new_filename = ["dummyname", " ", "0", "0", "x", "0", "0", ".", "ext"]
 		skip_file = False
 		
 		
