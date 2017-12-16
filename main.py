@@ -41,10 +41,10 @@ class series_database:
 	def set_db_path(self, path: str) -> None:
 		self._db_path = path
 	
-	def set_preprocessor_path(self, path: string) -> None:
+	def set_preprocessor_path(self, path: str) -> None:
 		self.__preprocessor_path = path
 	
-	def set_seperator_path(self, path: string) -> None:
+	def set_seperator_path(self, path: str) -> None:
 		self.__seperator_path = path
 	
 	def __init__(self):
