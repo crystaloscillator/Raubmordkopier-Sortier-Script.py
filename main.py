@@ -4,6 +4,10 @@
 ## known bugs ##
 # FIXME: 'v-0106.avi' to 'V - Die Besucher 0x010.mkv'
 
+## open todos ##
+
+# FIXME renumber the exits
+
 import os
 import shutil
 from os.path import abspath, expanduser, isfile
@@ -12,7 +16,6 @@ from time import sleep
 
 ### Setting ###
 
-# FIXME renumber the exits
 
 input_path = "/data/Downloads/"
 output_folder = "/data/Serien/"
