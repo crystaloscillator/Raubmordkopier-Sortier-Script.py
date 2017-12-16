@@ -78,17 +78,30 @@ class series_database:
 		self.__seperator = []
 	
 	def __import_db_line(self, line_number: int, name: str, tuning: str, keywords: str) -> None:
+		if name in self.__db_names:
+			print("database entry '%s' in line %i is a duplicate, abort loading" % (name, line_number))
+			exit(101)
+		self.__db_names[line_number] = name
+		if tuning not in ('animation', 'grain', 'film'):
+			print("unsupported tuning found in line %i: '%s', abort loading" % (line_number, tuning))
+			exit(100)
+		self.__db_tunings[line_number] = tuning
 		for keyword in keywords.split(','):
 			if keyword in self.__db_keywords:
 				print("Database inconsistent, line %i and line %i contain the same keyword '%s', abort loading"
-				      % (self.__db_keywords[keyword], line, keyword))
+				      % (self.__db_keywords[keyword], line_number, keyword))
 				exit(111)
-			if tuning not in ('animation', 'grain', 'film'):
-				print("unsupported tuning found in line %i: '%s', abort loading" % (line_number, tuning))
-				exit(100)
+			if keyword != lower(keyword):
+				print(
+					"keyword '%s' in line %i is not lowercase, case sensitive matching isn't supported, abort loading"
+					% (
+					keyword, line_number))
+				exit(123)
 			self.__db_keywords[keyword] = line_number
-			self.__db_names[line_number] = name
-			self.__db_tunings[line_number] = tuning
+	
+	# FIXME: lasse einen Test laufen, ob ein eintrag in der DB reversibel ist, sprich nach dem Umbennenen wird mit
+	#  hilfe der
+	             
 	
 	def __import_preprocessor_line(self, line_number: int, search: str, replace: str) -> None
 		try:
@@ -188,11 +201,6 @@ if __name__ == "__main__":
 	
 	# FIXME: todo list #
 	
-	# check second item for in
-	# check third items for beeing all lowercase, else print a warning
-	# check for search string collisions
-	# check for series names collisions
-	# lasse einen Test laufen, ob ein eintrag in der DB reversibel ist, sprich nach dem Umbennenen wird mit hilfe der
 	# Replaces und den Suchwörtern der Eintrag wieder richtig zugeordnet
 	
 	# remove_strings = #do an import here
