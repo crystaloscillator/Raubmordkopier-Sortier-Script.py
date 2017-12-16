@@ -33,7 +33,7 @@ class directory_reader:
 	def set_dir(self, path: str) -> None:
 		self.__path = path
 	
-	def get_file(self) -> str:
+	def pop_filename(self) -> str:
 		"""pop a file from the last dir reading"""
 		if self.__files is None or not len(self.__files):
 			return None
@@ -48,36 +48,72 @@ class directory_reader:
 			self.__files = os.listdir(self.__path)
 		except FileNotFoundError:
 			raise FileNotFoundError("Could not read directory at path '%s', it doesn't exist" % self.__path)
-		
 
 class series_database:
+	"""
+	loads and holds a database in memory, answer questions to filenames
+	"""
 	def set_db_path(self, path: str) -> None:
+		"""
+		:param path: ability to specify a absolut/relativ path the the db file
+		:return: None
+		"""
 		self._db_path = path
 	
 	def set_preprocessor_path(self, path: str) -> None:
+		"""
+		:param path: ability to specify a absolut/relativ path the the preprocessor file
+		:return: None
+		"""
 		self.__preprocessor_path = path
 	
 	def set_seperator_path(self, path: str) -> None:
+		"""
+		:param path: ability to specify a absolut/relativ path the the seperator file
+		:return: None
+		"""
 		self.__seperator_path = path
 	
 	def __init__(self):
+		"""
+		set the default relativ paths for all three database files
+		"""
 		self.__db_path = './series.db'
 		self.__preprocessor_path = './preprocessor.list'
 		self.__seperator_path = './seperator.list'
 	
 	def __init_db(self) -> None:
+		"""
+		init the variables for the database file
+		:return: None
+		"""
 		self.__db_keywords = { }
 		self.__db_tunings = { }
 		self.__db_names = { }
 	
 	def __init_preprocessor(self) -> None:
+		"""
+		init the variables for the preprocessor file
+		:return: None
+		"""
 		self.__preprocessor = []
 		self.__preprocessor_searches = set()
 	
 	def __init_seperator(self) -> None:
+		"""
+		init the variable for the seperator file
+		:return: None
+		"""
 		self.__seperator = []
 	
 	def __import_db_line(self, line_number: int, name: str, tuning: str, keywords: str) -> None:
+		"""
+		:param line_number: current line number which is beeing read
+		:param name: name of the database entry
+		:param tuning: the specified tuning for the database entry
+		:param keywords: all keywords which should identify a file to the database entry (need to be lowercase)
+		:return: None
+		"""
 		if name in self.__db_names:
 			print("database entry '%s' in line %i is a duplicate, abort loading" % (name, line_number))
 			exit(101)
@@ -102,8 +138,13 @@ class series_database:
 	# FIXME: lasse einen Test laufen, ob ein eintrag in der DB reversibel ist, sprich nach dem Umbennenen wird mit
 	# FIXME: Hilfe der Keywords die Serie erneut gefunden.
 	
-	
-	def __import_preprocessor_line(self, line_number: int, search: str, replace: str) -> None
+	def __import_preprocessor_line(self, line_number: int, search: str, replace: str) -> None:
+		"""
+		:param line_number: which line of the db file we're currently reading
+		:param search: what's the search-phrase?
+		:param replace: what's the replace-phrase?
+		:return: None
+		"""
 		try:
 			if not len(search):
 				raise ValueError("preprocessor file: line %i has an empty search string" % line_number)
@@ -119,6 +160,10 @@ class series_database:
 		self.__preprocessor.append(search, replace)
 	
 	def __load_file(self, file_type: str) -> None:
+		"""
+		:param file_type: get a string which db filetype should be (re)loaded
+		:return: None
+		"""
 		if file_type == "database":
 			path = self.__db_path
 			self.__init_db()
@@ -168,6 +213,12 @@ class series_database:
 		self.__load_file("database")
 		self.__load_file("preprocessor")
 		self.__load_file("seperator")
+	
+	def valid_file(self, filename) -> bool:
+		"""
+		:param filename:
+		:return:
+		"""
 
 
 if __name__ == "__main__":
@@ -220,14 +271,32 @@ if __name__ == "__main__":
 	
 	print("done.\n")
 	
+	# FIXME: Old stuff - really needed?
+	elements_done = False
+	skip_file = False
+	new_filename_ = ""
+	counter = 0
+	new_filename = []
+	tmpint = 0
+	next_word = ""
+	words = []
+	bIsAnMkvInputFile = False
+	TuneProfile = "film"
 	first_time__in_loop = 1
+	
 	while True:
-		file = dir_reader.get_file()
+		file = dir_reader.pop_filename()
 		if file is None:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
 			sleep(5)
 			dir_reader.refresh()
 			continue
+		
+		# FIXME: Old stuff - really needed?
+		bIsAnMkvInputFile = False
+		new_filename = ["dummyname", " ", "0", "0", "x", "0", "0", ".", "ext"]
+		skip_file = False
+		
 		
 	
 	exit(0)
