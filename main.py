@@ -100,8 +100,8 @@ class series_database:
 			self.__db_keywords[keyword] = line_number
 	
 	# FIXME: lasse einen Test laufen, ob ein eintrag in der DB reversibel ist, sprich nach dem Umbennenen wird mit
-	#  hilfe der
-	             
+	# FIXME: Hilfe der Keywords die Serie erneut gefunden.
+	
 	
 	def __import_preprocessor_line(self, line_number: int, search: str, replace: str) -> None
 		try:
