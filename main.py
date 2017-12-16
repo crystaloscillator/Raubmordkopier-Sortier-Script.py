@@ -1,16 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-# KNOWN BUGS
-# 'v-0106.avi' to 'V - Die Besucher 0x010.mkv'
-#   Remuxing with ffmpeg
-#     Done.
-#   Remuxing with mkvmerge
-#     Done.
-#
-#
-#
+## known bugs ##
+# FIXME: 'v-0106.avi' to 'V - Die Besucher 0x010.mkv'
 
 import os
 import shutil
