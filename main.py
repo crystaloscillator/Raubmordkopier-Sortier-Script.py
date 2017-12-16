@@ -26,7 +26,7 @@ tmp_folder = "/tmp/"
 
 
 def expand_and_ensure_path(rel_path: str) -> str:
-	val = abspath(rel_path)
+	val = abspath(expanduser(rel_path))
 	ensure_dir(val)
 	return val
 
