@@ -14,6 +14,8 @@ from subprocess import CalledProcessError, DEVNULL, STDOUT, check_call, check_ou
 from time import sleep
 from collections import namedtuple
 from re import findall
+from own_exceptions import ResultNotUnique, DataValidationError
+
 
 
 def expand_and_ensure_path(rel_path: str) -> str:
@@ -159,13 +161,13 @@ class series_database:
 		"""
 		try:
 			if not len(search):
-				raise ValueError("preprocessor file: line %i has an empty search string" % line_number)
-			elif not len(replace):
-				raise ValueError("preprocessor file: line %i has an empty replace string" % line_number)
-			elif search in self.__preprocessor_searches:
-				raise ValueError("preprocessor file: search string '%s' was already added before" % search)
-		except ValueError as e:
-			print("preprocessor file inconsistent at line %i, abort loading" % int(line_number))
+				raise DataValidationError("preprocessor file: line %i has an empty search string" % line_number)
+			if not len(replace):
+				raise DataValidationError("preprocessor file: line %i has an empty replace string" % line_number)
+			if search in self.__preprocessor_searches:
+				raise DataValidationError("preprocessor file: search string '%s' was already added before" % search)
+		except DataValidationError as e:
+			print("Error: preprocessor file inconsistent at line %i, abort loading" % int(line_number))
 			print(e.message)
 			exit(100)
 		self.__preprocessor_searches.add(search)
@@ -173,6 +175,22 @@ class series_database:
 		preprocessor.search = search
 		preprocessor.replace = replace
 		self.__preprocessor.append(preprocessor)
+	
+	def __import_seperator_line(self, line_number: int, seperator: str) -> None:
+		"""
+		:param line_number: takes a line of file number
+		:param seperator: takes a char as string
+		:return: None
+		"""
+		try:
+			if not len(seperator):
+				raise DataValidationError("seperator file: line %i is empty" % line_number)
+			if len(seperator) != 1:
+				raise DataValidationError("seperator file: line %i contains more than one character" % line_number)
+		except DataValidationError as e:
+			print("Error: seperator file inconsistent at line %i, abort loading" % int(line_number))
+			print(e.message)
+			exit(100)
 	
 	def __load_file(self, file_type: str) -> None:
 		"""
@@ -207,10 +225,10 @@ class series_database:
 							search, replace = line.rstrip('\n').split(';')
 						elif file_type == "seperator":
 							if not len(line) == 1:
-								raise ValueError
+								raise DataValidationError
 							seperator = line
 					
-					except ValueError:
+					except DataValidationError:
 						print("%s file inconsistent at line %i, abort loading" % (file_type, int(line_number)))
 						exit(111)
 					if file_type == "database":
@@ -311,7 +329,7 @@ class series_database:
 		if len(found) == 1:
 			return found[0]
 		elif 1 < len(found):
-			raise IndexError
+			raise ResultNotUnique("more than one keywords matched, from different series")
 		else:
 			return -1
 	
@@ -348,7 +366,7 @@ class series_database:
 			episode = numbers[1]
 			if 1 <= len(season) <= 2 and 1 <= len(episode) <= 2:
 				return season, episode
-			raise IndexError("invalid length for episode/season numbers")
+			raise DataValidationError("invalid length for episode/season numbers")
 			
 		
 		if counter > 4:
