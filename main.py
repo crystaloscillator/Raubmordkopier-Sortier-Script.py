@@ -110,7 +110,7 @@ class converter:
 						os.remove(self.__complete_output_path)
 					except:
 						pass
-					continue
+					return
 				try:
 					print("   Removing input-file...")
 					os.remove(input_path + self.__tmp_filename)
@@ -118,7 +118,7 @@ class converter:
 				except:
 					print("Error: can't delete inputfile '" + str(
 						input_path + self.__tmp_filename) + "' after reading with ffmpeg")
-					continue
+					return
 			
 			else:
 				crashed = True
@@ -126,7 +126,10 @@ class converter:
 			crashed = True
 		
 		if crashed:
-			pass  # fixme: rename input file
+			try:
+				shutil.move(input_path + self.__tmp_filename, input_path + self.__tmp_filename + "_crash")
+			except:
+				pass
 	
 	def __transcode_audio_via_ffmpeg(self, complete_input_path) -> bool:
 		self.__complete_output_path = tmp_folder + self.__file_title + ".ffmpeg.mkv"
