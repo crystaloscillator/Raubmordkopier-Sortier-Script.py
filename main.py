@@ -93,7 +93,7 @@ class converter:
 				
 				# test if file already exists:
 				if isfile(output_file):
-					print("Warning: Output File Exists '%'" % output_file)
+					print("Warning: Output File Exists '%s'" % output_file)
 					for tmp_int in range(2, 100):
 						test_filename = output_folder + self.__file_title + "_" + str(tmp_int) + ".mkv"
 						if isfile(test_filename):
@@ -103,7 +103,7 @@ class converter:
 							break
 				# moving file
 				try:
-					move_file(self.__complete_output_path, output_file)
+					move_file_(self.__complete_output_path, output_file)
 					print("     Done.")
 				except:
 					try:
@@ -135,7 +135,7 @@ class converter:
 		self.__complete_output_path = tmp_folder + self.__file_title + ".ffmpeg.mkv"
 		cmd = [ffmpeg, "-i", complete_input_path, "-y", "-map", "0", "-c:v", "copy", "-c:a", "libopus", "-ac", "2",
 		       "-b:a",
-		       "84000", "-c:s", "copy", "-f", "matroska", \
+		       "84000", "-c:s", "copy", "-f", "matroska",
 		       "-metadata", 'title="' + self.__file_title + '"', self.__complete_output_path]
 		try:
 			check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
@@ -180,7 +180,7 @@ class converter:
 			return [999, tmpFilename, "", MuxToMkv]
 		
 		cmd1 = [ffmpeg, "-i", tmpFilename, "-y", "-map", "0", "-c:v", "libx264", "-crf", "24", "-preset", "slow",
-		        "-tune", sTune, \
+		        "-tune", sTune,
 		        "-movflags", "+faststart", "-c:a", "libopus", "-ac", "2", "-b:a", "84000", "-c:s", "copy", "-f",
 		        "matroska", "-metadata", 'title="' + sTitle + '"', outputPath]
 		print(cmd1)
@@ -585,7 +585,7 @@ def move_file(source: str, destination: str, filename: str) -> None:
 	shutil.move(source, destination + filename)
 
 
-def move_file(source_filepath: str, destination_filepath: str) -> None:
+def move_file_(source_filepath: str, destination_filepath: str) -> None:
 	ensure_dir(destination_filepath)
 	shutil.move(source_filepath, destination_filepath)
 
@@ -734,7 +734,7 @@ if __name__ == "__main__":
 		output_filename.name = db.get_name(series_number)  # FIXME method missing
 		output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
 		
-		file_converter.process(filepath, input_filename, output_filename)
+		file_converter.process(filepath, input_filename, output_filename, output_folder)
 		
 		# FIXME: Old stuff - really needed?
 		bIsAnMkvInputFile = False
