@@ -404,28 +404,28 @@ class series_database:
 			print("unable to open %s file at path '%s', exiting now" % (file_type, str(path)))
 			print(e)
 			exit(111)
-			
-			try:
-				for line_number, line in enumerate(file):
-					try:
-						if file_type == "database":
-							name, tuning, keywords = line.split(';')
-						elif file_type == "preprocessor":
-							search, replace = line.rstrip('\n').split(';')
-						elif file_type == "seperator":
-							if not len(line) == 1:
-								raise DataValidationError
-							seperator = line
-					
-					except DataValidationError:
-						print("%s file inconsistent at line %i, abort loading" % (file_type, int(line_number)))
-						exit(111)
+		
+		try:
+			for line_number, line in enumerate(file):
+				try:
 					if file_type == "database":
-						self.__import_db_line(line_number, name, tuning, keywords)
+						name, tuning, keywords = line.split(';')
 					elif file_type == "preprocessor":
-						self.__import_preprocessor_line(line_number, search, replace)
+						search, replace = line.rstrip('\n').split(';')
 					elif file_type == "seperator":
-						self.__import_seperator_line(line_number, seperator)
+						if not len(line) == 1:
+							raise DataValidationError
+						seperator = line
+				
+				except DataValidationError:
+					print("%s file inconsistent at line %i, abort loading" % (file_type, int(line_number)))
+					exit(111)
+				if file_type == "database":
+					self.__import_db_line(line_number, name, tuning, keywords)
+				elif file_type == "preprocessor":
+					self.__import_preprocessor_line(line_number, search, replace)
+				elif file_type == "seperator":
+					self.__import_seperator_line(line_number, seperator)
 			file.close()
 		except:
 			print("something went wrong reading the %s file" % file_type)
