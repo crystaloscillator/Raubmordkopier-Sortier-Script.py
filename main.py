@@ -190,12 +190,12 @@ class series_database:
 			path = self.__seperator_path
 			self.__init_seperator()
 		else:
-			print("unable to complete series_database.__load_file with this type: '%s'" % str(path))
+			print("unable to complete series_database.__load_file with this type: '%s'" % str(file_type))
 			exit(111)
 		try:
 			file = open(path, 'r')
 		except ValueError as e:
-			print("unable to open %s file at path '%s', exiting now" % (file_type, str(path))
+			print("unable to open %s file at path '%s', exiting now" % (file_type, str(path)))
 			print(e)
 			exit(111)
 			
@@ -354,7 +354,7 @@ class series_database:
 		
 		if counter > 4:
 			try:
-				print("Info: Too many numbers in filename, moving file '" + str(file) + "' to 'too many numbers'")
+				print("Info: Too many numbers in filename, moving file '%s' to 'too many numbers'" % input_filename)
 				move_file(filepath, too_many_numbers, input_filename)
 			except:
 				pass
@@ -362,7 +362,7 @@ class series_database:
 		
 		elif counter == 0:
 			try:
-				print("Info: No episode/season found, moving file '" + str(file) + "' to 'Filme'")
+				print("Info: No episode/season found, moving file '%s' to 'Filme'" % input_filename)
 				move_file(filepath, dl_video_folder, input_filename)
 			except:
 				pass
@@ -370,7 +370,7 @@ class series_database:
 		
 		elif counter == 1:
 			try:
-				print("Info: Too less numbers in filename, moving file '" + str(file) + "' to 'too less numbers'")
+				print("Info: Too less numbers in filename, moving file '%s' to 'too less numbers'" % input_filename)
 				move_file(filepath, too_less_numbers, input_filename)
 			except:
 				pass
@@ -495,10 +495,6 @@ if __name__ == "__main__":
 				except:
 					print("Error: Can't move file '%s'" % input_filename)
 				continue
-			output_filename.name = db.get_name(series_number)  # FIXME method missing
-			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
-			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
-		
 		except IndexError as e:
 			print("Info: No exact match found: %s, moving file '%s' to no exact match" % (str(found), input_filename))
 			try:
@@ -506,6 +502,12 @@ if __name__ == "__main__":
 			except:
 				print("Error: Can't move file '%s'" % input_filename)
 			continue
+		try:
+			output_filename.name = db.get_name(series_number)  # FIXME method missing
+			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
+			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
+		except IndexError as e:
+		
 		
 		
 		# FIXME: Old stuff - really needed?
