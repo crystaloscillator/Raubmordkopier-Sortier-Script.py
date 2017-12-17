@@ -260,7 +260,7 @@ class series_database:
 		:param path: ability to specify a absolut/relativ path the the db file
 		:return: None
 		"""
-		self._db_path = path
+		self.__db_path = path
 	
 	def set_preprocessor_path(self, path: str) -> None:
 		"""
