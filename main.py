@@ -233,24 +233,24 @@ class series_database:
 		:return: None
 		"""
 		if name in self.__db_names:
-			print("database entry '%s' in line %i is a duplicate, abort loading" % (name, line_number))
+			print("database entry '%s' in line %i is a duplicate, abort loading" % (name, line_number + 1))
 			exit(101)
 		self.__db_names[line_number] = name
 		if tuning not in ('animation', 'grain', 'film'):
-			print("unsupported tuning found in line %i: '%s', abort loading" % (line_number, tuning))
+			print("unsupported tuning found in line %i: '%s', abort loading" % (line_number + 1, tuning))
 			exit(100)
 		self.__db_tunings[line_number] = tuning
 		for keyword in keywords.split(','):
 			if keyword in self.__db_keywords:
 				print("Database inconsistent, line %i and line %i contain the same keyword '%s', abort loading"
-				      % (self.__db_keywords[keyword], line_number, keyword))
+				      % (self.__db_keywords[keyword] + 1, line_number + 1, keyword))
 				exit(111)
 			if keyword != keyword.lower():
 				print(
 						"keyword '%s' in line %i is not lowercase, case sensitive matching isn't supported, "
 						"abort loading"
 						% (
-							keyword, line_number))
+							keyword, line_number + 1))
 				exit(123)
 			self.__db_keywords[keyword] = line_number
 	
@@ -266,13 +266,15 @@ class series_database:
 		"""
 		try:
 			if not len(search):
-				raise DataValidationError("preprocessor file: line %i has an empty search string" % line_number)
+				raise DataValidationError(
+					"preprocessor file: line %s has an empty search string" % str(line_number + 1))
 			if not len(replace):
-				raise DataValidationError("preprocessor file: line %i has an empty replace string" % line_number)
+				raise DataValidationError(
+					"preprocessor file: line %s has an empty replace string" % str(line_number + 1))
 			if search in self.__preprocessor_searches:
 				raise DataValidationError("preprocessor file: search string '%s' was already added before" % search)
 		except DataValidationError:
-			print("Error: preprocessor file inconsistent at line %i, abort loading" % int(line_number))
+			print("Error: preprocessor file inconsistent at line %s, abort loading" % str(line_number + 1))
 			exit(100)
 		self.__preprocessor_searches.add(search)
 		preprocessor = namedtuple('preprocessor', 'search replace')
@@ -289,11 +291,12 @@ class series_database:
 		"""
 		try:
 			if not len(seperator):
-				raise DataValidationError("seperator file: line %i is empty" % line_number)
+				raise DataValidationError("seperator file: line %s is empty" % str(line_number + 1))
 			if len(seperator) != 1:
-				raise DataValidationError("seperator file: line %i contains more than one character" % line_number)
+				raise DataValidationError(
+					"seperator file: line %s contains more than one character" % str(line_number + 1))
 		except DataValidationError:
-			print("Error: seperator file inconsistent at line %i, abort loading" % int(line_number))
+			print("Error: seperator file inconsistent at line %s, abort loading" % str(line_number + 1))
 			exit(100)
 	
 	def __load_file(self, file_type: str) -> None:
@@ -320,31 +323,37 @@ class series_database:
 			print(e)
 			exit(111)
 		
-		try:
-			for line_number, line in enumerate(file):
-				try:
-					if file_type == "database":
-						name, tuning, keywords = line.split(';')
-					elif file_type == "preprocessor":
-						search, replace = line.rstrip('\n').split(';')
-					elif file_type == "seperator":
-						if not len(line) == 1:
-							raise DataValidationError
-						seperator = line
-				
-				except DataValidationError:
-					print("%s file inconsistent at line %i, abort loading" % (file_type, int(line_number)))
-					exit(111)
+		# try:
+		for line_number, line in enumerate(file):
+			line = line.rstrip('\n')
+			try:
+				if file_type == "database":
+					name, tuning, keywords = line.split(';')
+				elif file_type == "preprocessor":
+					search, replace = line.split(';')
+				elif file_type == "seperator":
+					if not len(line) == 1:
+						raise ValueError
+					seperator = line
+			
+			except ValueError:
+				print("%s file inconsistent at line %i, abort loading" % (file_type, int(line_number) + 1))
+				exit(111)
+			try:
 				if file_type == "database":
 					self.__import_db_line(line_number, name, tuning, keywords)
 				elif file_type == "preprocessor":
 					self.__import_preprocessor_line(line_number, search, replace)
 				elif file_type == "seperator":
 					self.__import_seperator_line(line_number, seperator)
-			file.close()
-		except:
-			print("something went wrong reading the %s file" % file_type)
-			exit(120)
+			except DataValidationError as e:
+				print(e)
+				exit(123)
+		file.close()
+	
+	# except:
+	# print("something went wrong reading the %s file" % file_type)
+	#exit(120)
 	
 	def load_databases(self) -> None:
 		self.__load_file("database")
