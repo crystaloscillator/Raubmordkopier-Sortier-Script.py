@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 ## known bugs ##
 # FIXME: 'v-0106.avi' to 'V - Die Besucher 0x010.mkv'
@@ -194,7 +193,7 @@ class series_database:
 			exit(111)
 		try:
 			file = open(path, 'r')
-		except ValueError as e:
+		except ValueError as e:  # FIXME wrong type of except
 			print("unable to open %s file at path '%s', exiting now" % (file_type, str(path)))
 			print(e)
 			exit(111)
