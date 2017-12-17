@@ -17,11 +17,11 @@ from re import findall
 from own_exceptions import ResultNotUnique, DataValidationError, TooManyNumbers, TooLessNumbers
 
 
-
 def expand_and_ensure_path(rel_path: str) -> str:
 	val = abspath(expanduser(rel_path))
 	ensure_dir(val)
 	return val
+
 
 def ensure_dir(f: str) -> None:
 	d = os.path.dirname(f)
@@ -36,8 +36,6 @@ def validate_mkv(filepath):
 			return 1
 	return 0
 
-
-def
 
 class directory_reader:
 	def __init__(self, path=None):
@@ -63,10 +61,197 @@ class directory_reader:
 		except FileNotFoundError:
 			raise FileNotFoundError("Could not read directory at path '%s', it doesn't exist" % self.__path)
 
+
+class converter:
+	def __init__(self):
+		self.__file_title = "nonsense 01x01"
+		self.__complete_output_path = ""
+		self.__tmp_filename = ""
+	
+	def process(self, input_path: str, input_filename: str, output: namedtuple, output_folder: str) -> None:
+		self.__file_title = "%s %sx%s" % (output.name, output.season, output.episode)
+		
+		crashed = False
+		print("   Remuxing file from series-folder to temp-location with mkvmerge...", end='')
+		if self.__remux_via_mkvmerge(input_filename, input_path):
+			print("done.")
+			print("   Transcoding audio-data with ffmpeg, this might take some while...", end='')
+			ffmpeg_input_file = self.__complete_output_path
+			if self.__transcode_audio_via_ffmpeg(self.__complete_output_path):
+				print("done.")
+				print("   removing ffmpeg-input file at temp-location...", end='')
+				if isfile(ffmpeg_input_file):
+					try:
+						os.remove(ffmpeg_input_file)
+					except:
+						print("\nError while removing file!")
+				print("   moving file from temp-location to series-folder...")
+				
+				output_folder = "%s%s/%s S%s/" % (output_folder, output.name, output.name, output.season)
+				
+				output_file = output_folder + self.__file_title + ".mkv"
+				
+				# test if file already exists:
+				if isfile(output_file):
+					print("Warning: Output File Exists '%'" % output_file)
+					for tmp_int in range(2, 100):
+						test_filename = output_folder + self.__file_title + "_" + str(tmp_int) + ".mkv"
+						if isfile(test_filename):
+							print("Warning: Output File Exists '" + test_filename + "'")
+						else:
+							output_file = test_filename
+							break
+				# moving file
+				try:
+					move_file(self.__complete_output_path, output_file)
+					print("     Done.")
+				except:
+					try:
+						os.remove(self.__complete_output_path)
+					except:
+						pass
+					continue
+				try:
+					print("   Removing input-file...")
+					os.remove(input_path + self.__tmp_filename)
+					print("     Done.")
+				except:
+					print("Error: can't delete inputfile '" + str(
+						input_path + self.__tmp_filename) + "' after reading with ffmpeg")
+					continue
+			
+			else:
+				crashed = True
+		else:
+			crashed = True
+		
+		if crashed:
+			pass  # fixme: rename input file
+	
+	def __transcode_audio_via_ffmpeg(self, complete_input_path) -> bool:
+		self.__complete_output_path = tmp_folder + self.__file_title + ".ffmpeg.mkv"
+		cmd = [ffmpeg, "-i", complete_input_path, "-y", "-map", "0", "-c:v", "copy", "-c:a", "libopus", "-ac", "2",
+		       "-b:a",
+		       "84000", "-c:s", "copy", "-f", "matroska", \
+		       "-metadata", 'title="' + self.__file_title + '"', self.__complete_output_path]
+		try:
+			check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+		except CalledProcessError as e:
+			print("\nError: While transcoding audio with ffmpeg: '%i'" % e.returncode)
+			return False
+		return True
+	
+	def __remux_via_mkvmerge(self, input_filename, input_path) -> bool:
+		self.__tmp_filename = input_filename + "_mkvmerge"
+		self.__complete_output_path = tmp_folder + title + ".mkvmerge.mkv"
+		try:
+			shutil.move(input_path + input_filename, input_path + self.__tmp_filename)
+		except:
+			print("\nError: Renaming %s to %s failed" % (input_filename, self.__tmp_filename))
+			raise IOError("could not rename file")
+		
+		cmd = [mkvmerge, "-q", "--title", self.__file_title, "--default-language", "de", "-B", "-T", "--no-chapters",
+		       "-M",
+		       "--no-global-tags", "--priority", "lower", self.__tmp_filename, "-o", self.__complete_output_path]
+		
+		try:
+			check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+		except CalledProcessError as e:
+			print("\nError: While doing mkvmerge-Copy, return code: '%i'" % e.returncode)
+			return False
+		return True
+	
+	def ffmpegConvertIt(bMKV, sInputFile, sTitle, sTune):
+		# bMKV        - sets true to mkvinfo it, do not transcode if already transcoded
+		# sInputFile  - Input filename
+		# sTune       - Film or Animation Seriestype
+		# sTitle      - The Title of the Series -> Output Filename + .mkv
+		needTranscode = 0
+		tmpFilename = sInputFile + "_ffmpg"
+		outputPath = tmp_folder + sTitle + ".mkv"
+		MuxToMkv = False
+		try:
+			shutil.move(sInputFile, tmpFilename)
+		except:
+			print("Error: Renaming " + sInputFile + " to " + tmpFilename + " failed")
+			return [999, tmpFilename, "", MuxToMkv]
+		
+		cmd1 = [ffmpeg, "-i", tmpFilename, "-y", "-map", "0", "-c:v", "libx264", "-crf", "24", "-preset", "slow",
+		        "-tune", sTune, \
+		        "-movflags", "+faststart", "-c:a", "libopus", "-ac", "2", "-b:a", "84000", "-c:s", "copy", "-f",
+		        "matroska", "-metadata", 'title="' + sTitle + '"', outputPath]
+		print(cmd1)
+		cmd2 = [ffmpeg, "-i", tmpFilename, "-y", "-map", "0", "-c:v", "-c:v", "copy", "-c:a", "copy", "-c:s", "copy",
+		        "-metadata", 'title="' + sTitle + '"', "-f", "matroska", outputPath]
+		cmd3 = [mkvmerge, "-q", "--title", sTitle, "--default-language", "de", "-B", "-T", "--no-chapters", "-M",
+		        "--no-global-tags", "--priority", "lower", tmpFilename, "-o", outputPath]
+		
+		if bMKV:
+			print("Debug: This is an mkv, running mkvinfo...")
+			try:
+				needTranscode = checkMKV(check_output([mkvinfo, tmpFilename], stderr=STDOUT, universal_newlines=True))
+			except CalledProcessError:
+				print("error while running mkvinfo")
+				return [998, tmpFilename, "", MuxToMkv]
+		else:  # going to mkv it first
+			MuxToMkv = True
+		
+		if needTranscode:
+			cmd = cmd1
+			print("   Transcoding A/V-Data with ffmpeg, this might take some while...")
+		elif MuxToMkv:
+			cmd = cmd2
+			cmd[-1] = sInputFile + ".mkv"
+			print("   Remuxing with ffmpeg to mkv to input-folder")
+		else:
+			print("   Remuxing with ffmpeg to mkv")
+			cmd = cmd2
+		errorcode = -1
+		crashed = 0
+		try:
+			check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+		except CalledProcessError as e:
+			crashed = 1
+			errorcode = e.returncode
+			if needTranscode:
+				print("Error: While doing FFMPEG-Transcoding, return code: '" + str(e.returncode) + "'")
+			else:
+				print("Error: While doing FFMPEG-Copy, return code: '" + str(
+						e.returncode) + "', try to remux with mkvmerge")
+		if crashed:
+			cmd = cmd3
+			try:
+				check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+				print("Debug: Successfully remuxed to mkv with mkvmerge")
+				crashed = 0
+			except CalledProcessError as e:
+				errorcode = e.returncode
+				print("Error: While doing mkvmerge-Copy, return code: '" + str(e.returncode) + "'")
+			if needTranscode:
+				print("moving tmp-file back to input location...")
+				shutil.move(outputPath, tmpFilename)
+				cmd = cmd1
+				print("   Transcoding A/V-Data with ffmpeg, this might take some while...")
+				errorcode = -1
+				crashed = 0
+				try:
+					check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+				except CalledProcessError as e:
+					crashed = 1
+					errorcode = e.returncode
+					print("Error: While doing FFMPEG-Transcoding (yet again), return code: '" + str(e.returncode) +
+					      "'")
+		if crashed:
+			return [errorcode, tmpFilename, "", MuxToMkv]
+		else:
+			return [0, tmpFilename, outputPath, MuxToMkv]
+
+
 class series_database:
 	"""
 	loads and holds a database in memory, answer questions to filenames
 	"""
+	
 	def set_db_path(self, path: str) -> None:
 		"""
 		:param path: ability to specify a absolut/relativ path the the db file
@@ -143,9 +328,10 @@ class series_database:
 				exit(111)
 			if keyword != lower(keyword):
 				print(
-					"keyword '%s' in line %i is not lowercase, case sensitive matching isn't supported, abort loading"
-					% (
-					keyword, line_number))
+						"keyword '%s' in line %i is not lowercase, case sensitive matching isn't supported, "
+						"abort loading"
+						% (
+							keyword, line_number))
 				exit(123)
 			self.__db_keywords[keyword] = line_number
 	
@@ -278,7 +464,11 @@ class series_database:
 			return (True, False)
 		elif filename[-5:].lower() in (".part", ".rar_"):
 			return (False, False)
-		elif filename[-6:].lower() in ("_crash", "_ffmpg"):  # skip silently
+		elif filename[-6:].lower() in ("_crash", "_ffmpg"):
+			return (False, False)
+		elif filename[-9:].lower() in ("_mkvmerge"):
+			return (False, False)
+		elif filename[-9:].lower() in ("_backcopy"):
 			return (False, False)
 		elif filename[-4:].lower() in (".rar", ".old", ".zip"):  # skip silently
 			return (False, False)
@@ -371,10 +561,30 @@ class series_database:
 			raise TooLessNumbers("less than two distinguishable numbers found in filename")
 		if len(numbers) > 2:
 			raise TooManyNumbers("more than two distinguashable numbers found in filename")
+	
+	def get_name(self, series_id: int) -> str:
+		"""
+		:param series_id: takes a id to the database
+		:return: the name of the series
+		"""
+		return self.__db_names[series_id]
+	
+	def get_tuning(self, series_id: int) -> str:
+		"""
+		:param series_id: takes a id to the database
+		:return: the tuning of the series
+		"""
+		return self.__db_tunings[series_id]
+
 
 def move_file(source: str, destination: str, filename: str) -> None:
 	ensure_dir(destination + filename)
 	shutil.move(source, destination + filename)
+
+
+def move_file(source_filepath: str, destination_filepath: str) -> None:
+	ensure_dir(destination_filepath)
+	shutil.move(source_filepath, destination_filepath)
 
 
 if __name__ == "__main__":
@@ -420,6 +630,8 @@ if __name__ == "__main__":
 	
 	print("done.\n")
 	
+	file_converter = converter()
+	
 	# FIXME: Old stuff - really needed?
 	elements_done = False
 	skip_file = False
@@ -433,12 +645,12 @@ if __name__ == "__main__":
 	TuneProfile = "film"
 	first_time__in_loop = 1
 	
-	while True:  #one loop per file
+	while True:  # one loop per file
 		# init vars
 		valid_file, filetype_mkv = False, False
 		output_filename = namedtuple('episode', 'name season episode file_extention tuning')
 		
-		#pop a filename from reader or reread directory
+		# pop a filename from reader or reread directory
 		input_filename = dir_reader.pop_filename()
 		if file is None:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
@@ -470,6 +682,9 @@ if __name__ == "__main__":
 			TooManyNumbers_found = True
 		except TooLessNumbers as e:
 			TooLessNumbers_found = True
+		
+		output_filename.season = output_filename.season.zerofill(2)
+		output_filename.episode = output_filename.episode.zerofill(2)
 		
 		try:
 			series_number = db.detect_series(input_filename_preprocessed)
@@ -513,18 +728,13 @@ if __name__ == "__main__":
 				pass
 			continue
 		
-		try:
-			output_filename.name = db.get_name(series_number)  # FIXME method missing
-			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
-		except DataValidationError as e:
-			pass
+		output_filename.name = db.get_name(series_number)  # FIXME method missing
+		output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
 		
-		
+		file_converter.process(filepath, input_filename, output_filename)
 		
 		# FIXME: Old stuff - really needed?
 		bIsAnMkvInputFile = False
 		skip_file = False
-		
-		
 	
 	exit(0)
