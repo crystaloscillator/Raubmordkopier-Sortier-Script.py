@@ -21,12 +21,21 @@ def expand_and_ensure_path(rel_path: str) -> str:
 	ensure_dir(val)
 	return val
 
-
 def ensure_dir(f: str) -> None:
 	d = os.path.dirname(f)
 	if not os.path.exists(d):
 		os.makedirs(d)
 
+
+def validate_mkv(filepath):
+	MkvInfo_output = check_output([mkvinfo, filepath], stderr=STDOUT, universal_newlines=True)
+	for line in MkvInfo_output.split("\n"):
+		if line.startswith("|  + Codec-ID:") and "A_OPUS" in line:
+			return 1
+	return 0
+
+
+def
 
 class directory_reader:
 	def __init__(self, path=None):
@@ -220,42 +229,44 @@ class series_database:
 		self.__load_file("preprocessor")
 		self.__load_file("seperator")
 	
-	def valid_file(self, filename: str) -> bool:
+	def valid_file(self, filename: str) -> tulple:
 		"""
 		:param filename: takes a filename
 		:return: returns if the files is valid for processing
 		"""
-		if not type(filename) == str:
-			return False
+		if not type(filename) is str:
+			return (False, False)
 		
 		if len(filename) < 5:
-			return False
+			return (False, False)
 		if len(filename) >= 11:
 			if filename[-11:].lower() == ".crdownload":
-				return False
+				return (False, False)
 			elif filename[-11:].lower() == "desktop.ini":
-				return False
+				return (False, False)
 		
 		# ignore files like xxx.rar.001
 		try:
 			int(filename[-3:])
-			return False
+			return (False, False)
 		except:
 			pass
 		
-		if filename[-4:].lower() in (".avi", ".ogm", ".mkv", ".mp4", ".flv"):
-			return True
+		if filename[-4:].lower() in (".avi", ".ogm", ".mp4", ".flv"):
+			return (True, False)
+		if filename[-4:].lower() == ".mkv":
+			return (True, True)
 		elif filename[-5:].lower() in (".divx", ".webm"):
-			return True
+			return (True, False)
 		elif filename[-5:].lower() in (".part", ".rar_"):
-			return False
+			return (False, False)
 		elif filename[-6:].lower() in ("_crash", "_ffmpg"):  # skip silently
-			return False
+			return (False, False)
 		elif filename[-4:].lower() in (".rar", ".old", ".zip"):  # skip silently
-			return False
+			return (False, False)
 		elif filename[-3:].lower() == ".7z":  # skip silently
-			return False
-		return False  # is a non-detectable filetype or a folder
+			return (False, False)
+		return (False, False)  # is a non-detectable filetype or a folder
 	
 	def preprocessor(self, filename: str) -> str:
 		"""
@@ -299,7 +310,7 @@ class series_database:
 		pass
 
 if __name__ == "__main__":
-	input_path = "~/Downloads/"
+	input_path = "~/downloads/"
 	output_folder = "~/series/"
 	dl_video_folder = "~/movies/"
 	other_files_dir = "~/stuff/"
@@ -355,8 +366,11 @@ if __name__ == "__main__":
 	first_time__in_loop = 1
 	
 	while True:
+		# init vars
+		valid_file, filetype_mkv = False, False
 		output_filename = namedtuple('episode', 'name season episode file_extention tuning')
 		
+		#pop a filename from reader or reread directory
 		input_filename = dir_reader.pop_filename()
 		if file is None:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
@@ -364,8 +378,10 @@ if __name__ == "__main__":
 			dir_reader.refresh()
 			continue
 		
-		if not db.valid_file(input_path):
-			if isfile(input_path + '/' + input_filename):
+		# validate file-extentions #FIXME: we need more magic here!
+		valid_file, filetype_mkv = db.valid_file(input_path)
+		if not valid_file:
+			if isfile(input_path + '/' + input_filename):  #make sure this isn't a directory
 				try:
 					print("Info: No usable file-extension found, moving file '" + str(file) + "' to 'other files'")
 					ensure_dir(other_files_dir + input_filename)
