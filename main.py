@@ -344,47 +344,18 @@ class series_database:
 		
 		numbers = findall(r'\d+', filename)
 		
-		[int(s) for s in str.split() if s.isdigit()]
-		
-		for char in filename:
-			try:
-				tmpint = int(char)
-				if counter == 0:
-					integers[0] = tmpint
-				elif counter == 1 and lastCharWasInt:
-					integers[1] = tmpint
-				elif counter == 1 and not lastCharWasInt:  # we have 0x00
-					integers[1] = integers[0]
-					integers[0] = 0
-					integers[2] = tmpint
-					counter += 1
-				elif counter == 2 and lastCharWasInt:  # we have --x000
-					integers[3] = tmpint
-					integers[2] = integers[1]
-					integers[1] = integers[0]
-					integers[0] = 0
-					hundersOfEpisodes = True
-				elif counter == 2 and not lastCharWasInt:
-					integers[2] = tmpint
-				elif counter == 3 and lastCharWasInt and not hundersOfEpisodes:
-					integers[3] = tmpint
-				elif counter == 3 and lastCharWasInt and HundersOfEpisodes:
-					integers[0] = integers[1]
-					integers[1] = integers[2]
-					integers[2] = integers[3]
-					integers[3] = tmpint
-					hundersOfEpisodes = False
-				
-				lastCharWasInt = True
-				counter += 1
-			except:
-				lastCharWasInt = False
+		if len(numbers) == 2:
+			season = numbers[0]
+			episode = numbers[1]
+			if 1 <= len(season) <= 2 and 1 <= len(episode) <= 2:
+				return season, episode
+			raise IndexError("invalid length for episode/season numbers")
+			
 		
 		if counter > 4:
 			try:
 				print("Info: Too many numbers in filename, moving file '" + str(file) + "' to 'too many numbers'")
-				ensure_dir(too_many_numbers + file)
-				shutil.move(file, too_many_numbers + file)
+				move_file(filepath, too_many_numbers, input_filename)
 			except:
 				pass
 			continue
@@ -392,8 +363,7 @@ class series_database:
 		elif counter == 0:
 			try:
 				print("Info: No episode/season found, moving file '" + str(file) + "' to 'Filme'")
-				ensure_dir(dl_video_folder + file)
-				shutil.move(file, dl_video_folder + file)
+				move_file(filepath, dl_video_folder, input_filename)
 			except:
 				pass
 			continue
@@ -401,8 +371,7 @@ class series_database:
 		elif counter == 1:
 			try:
 				print("Info: Too less numbers in filename, moving file '" + str(file) + "' to 'too less numbers'")
-				ensure_dir(too_less_numbers + file)
-				shutil.move(file, too_less_numbers + file)
+				move_file(filepath, too_less_numbers, input_filename)
 			except:
 				pass
 			continue
@@ -427,6 +396,12 @@ class series_database:
 			new_filename[6] = str(integers[3])
 		
 		return (season, episode)
+
+
+def move_file(source: str, destination: str, filename: str) -> None:
+	ensure_dir(destination + filename)
+	shutil.move(source, destination + filename)
+
 
 if __name__ == "__main__":
 	input_path = "~/downloads/"
@@ -504,8 +479,7 @@ if __name__ == "__main__":
 			if isfile(filepath):  # make sure this isn't a directory
 				try:
 					print("Info: No usable file-extension found, moving file '%s' to 'other files'" % input_filename)
-					ensure_dir(other_files_dir + input_filename)
-					shutil.move(filepath, other_files_dir + input_filename)
+					move_file(filepath, other_files_dir, input_filename)
 				except:
 					print("Error: Can't move file '%s'" % input_filename)
 				pass
@@ -517,8 +491,7 @@ if __name__ == "__main__":
 			if series_number == -1:
 				print("Info: Series unknown, moving file '%s' to series unknown" % str(input_filename))
 				try:
-					ensure_dir(series_unknown + input_filename)
-					shutil.move(filepath, series_unknown + input_filename)
+					move_file(filepath, series_unknown, input_filename)
 				except:
 					print("Error: Can't move file '%s'" % input_filename)
 				continue
@@ -529,8 +502,7 @@ if __name__ == "__main__":
 		except IndexError as e:
 			print("Info: No exact match found: %s, moving file '%s' to no exact match" % (str(found), input_filename))
 			try:
-				ensure_dir(no_exact_match + input_filename)
-				shutil.move(filepath, no_exact_match + input_filename)
+				move_file(filepath, no_exact_match, input_filename)
 			except:
 				print("Error: Can't move file '%s'" % input_filename)
 			continue
