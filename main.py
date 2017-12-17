@@ -365,7 +365,8 @@ class series_database:
 		preprocessor.replace = replace
 		self.__preprocessor.append(preprocessor)
 	
-	def __import_seperator_line(self, line_number: int, seperator: str) -> None:
+	@staticmethod
+	def __import_seperator_line(line_number: int, seperator: str) -> None:
 		"""
 		:param line_number: takes a line of file number
 		:param seperator: takes a char as string
@@ -436,7 +437,8 @@ class series_database:
 		self.__load_file("preprocessor")
 		self.__load_file("seperator")
 	
-	def valid_file(self, filename: str) -> tulple:
+	@staticmethod
+	def valid_file(filename: str) -> tulple:
 		"""
 		:param filename: takes a filename
 		:return: returns if the files is valid for processing
@@ -526,7 +528,8 @@ class series_database:
 		else:
 			return -1
 	
-	def detect_season_episode(self, filename: str) -> tuple:
+	@staticmethod
+	def detect_season_episode(filename: str) -> tuple:
 		"""
 		runs a season + episode detection over a given filename
 		:param filename: takes a preprocessed filename
