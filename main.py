@@ -48,7 +48,7 @@ class directory_reader:
 	def pop_filename(self) -> str:
 		"""pop a file from the last dir reading"""
 		if self.__files is None or not len(self.__files):
-			return None
+			return ""
 		return self.__files.pop()
 	
 	def refresh(self) -> None:
@@ -72,6 +72,7 @@ class converter:
 		self.__file_title = "%s %sx%s" % (output.name, output.season, output.episode)
 		
 		crashed = False
+		# noinspection SpellCheckingInspection
 		print("   Remuxing file from series-folder to temp-location with mkvmerge...", end='')
 		if self.__remux_via_mkvmerge(input_filename, input_path):
 			print("done.")
@@ -117,7 +118,7 @@ class converter:
 					print("     Done.")
 				except:
 					print("Error: can't delete inputfile '" + str(
-						input_path + self.__tmp_filename) + "' after reading with ffmpeg")
+							input_path + self.__tmp_filename) + "' after reading with ffmpeg")
 					return
 			
 			else:
@@ -146,7 +147,7 @@ class converter:
 	
 	def __remux_via_mkvmerge(self, input_filename, input_path) -> bool:
 		self.__tmp_filename = input_filename + "_mkvmerge"
-		self.__complete_output_path = tmp_folder + title + ".mkvmerge.mkv"
+		self.__complete_output_path = tmp_folder + self.__file_title + ".mkvmerge.mkv"
 		try:
 			shutil.move(input_path + input_filename, input_path + self.__tmp_filename)
 		except:
@@ -163,7 +164,8 @@ class converter:
 			print("\nError: While doing mkvmerge-Copy, return code: '%i'" % e.returncode)
 			return False
 		return True
-	
+
+
 class series_database:
 	"""
 	loads and holds a database in memory, answer questions to filenames
@@ -243,7 +245,7 @@ class series_database:
 				print("Database inconsistent, line %i and line %i contain the same keyword '%s', abort loading"
 				      % (self.__db_keywords[keyword], line_number, keyword))
 				exit(111)
-			if keyword != lower(keyword):
+			if keyword != keyword.lower():
 				print(
 						"keyword '%s' in line %i is not lowercase, case sensitive matching isn't supported, "
 						"abort loading"
@@ -269,9 +271,8 @@ class series_database:
 				raise DataValidationError("preprocessor file: line %i has an empty replace string" % line_number)
 			if search in self.__preprocessor_searches:
 				raise DataValidationError("preprocessor file: search string '%s' was already added before" % search)
-		except DataValidationError as e:
+		except DataValidationError:
 			print("Error: preprocessor file inconsistent at line %i, abort loading" % int(line_number))
-			print(e.message)
 			exit(100)
 		self.__preprocessor_searches.add(search)
 		preprocessor = namedtuple('preprocessor', 'search replace')
@@ -291,9 +292,8 @@ class series_database:
 				raise DataValidationError("seperator file: line %i is empty" % line_number)
 			if len(seperator) != 1:
 				raise DataValidationError("seperator file: line %i contains more than one character" % line_number)
-		except DataValidationError as e:
+		except DataValidationError:
 			print("Error: seperator file inconsistent at line %i, abort loading" % int(line_number))
-			print(e.message)
 			exit(100)
 	
 	def __load_file(self, file_type: str) -> None:
@@ -352,48 +352,48 @@ class series_database:
 		self.__load_file("seperator")
 	
 	@staticmethod
-	def valid_file(filename: str) -> tulple:
+	def valid_file(filename: str):
 		"""
 		:param filename: takes a filename
 		:return: returns if the files is valid for processing
 		"""
 		if not type(filename) is str:
-			return (False, False)
+			return False, False
 		
 		if len(filename) < 5:
-			return (False, False)
+			return False, False
 		if len(filename) >= 11:
 			if filename[-11:].lower() == ".crdownload":
-				return (False, False)
+				return False, False
 			elif filename[-11:].lower() == "desktop.ini":
-				return (False, False)
+				return False, False
 		
 		# ignore files like xxx.rar.001
 		try:
 			int(filename[-3:])
-			return (False, False)
+			return False, False
 		except:
 			pass
 		
 		if filename[-4:].lower() in (".avi", ".ogm", ".mp4", ".flv"):
-			return (True, False)
+			return True, False
 		if filename[-4:].lower() == ".mkv":
-			return (True, True)
+			return True, True
 		elif filename[-5:].lower() in (".divx", ".webm"):
-			return (True, False)
+			return True, False
 		elif filename[-5:].lower() in (".part", ".rar_"):
-			return (False, False)
+			return False, False
 		elif filename[-6:].lower() in ("_crash", "_ffmpg"):
-			return (False, False)
-		elif filename[-9:].lower() in ("_mkvmerge"):
-			return (False, False)
-		elif filename[-9:].lower() in ("_backcopy"):
-			return (False, False)
+			return False, False
+		elif filename[-9:].lower() in "_mkvmerge":
+			return False, False
+		elif filename[-9:].lower() in "_backcopy":
+			return False, False
 		elif filename[-4:].lower() in (".rar", ".old", ".zip"):  # skip silently
-			return (False, False)
+			return False, False
 		elif filename[-3:].lower() == ".7z":  # skip silently
-			return (False, False)
-		return (False, False)  # is a non-detectable filetype or a folder
+			return False, False
+		return False, False  # is a non-detectable filetype or a folder
 	
 	def preprocessor(self, filename: str) -> str:
 		"""
@@ -449,25 +449,6 @@ class series_database:
 		:param filename: takes a preprocessed filename
 		:return: returns a tuple: (season, episode)
 		"""
-		season, episode = 0, 0
-		
-		# old stuff
-		integers = [0, 0, 0, 0]
-		lastCharWasInt = False
-		counter = 0
-		hundersOfEpisodes = False
-		# other old stuff
-		elements_done = False
-		skip_file = False
-		new_filename_ = ""
-		counter = 0
-		new_filename = []
-		tmpint = 0
-		next_word = ""
-		words = []
-		bIsAnMkvInputFile = False
-		TuneProfile = "film"
-		# end of old stuff
 		
 		numbers = findall(r'\d+', filename)
 		
@@ -475,7 +456,7 @@ class series_database:
 			season = numbers[0]
 			episode = numbers[1]
 			if len(season) <= 2 and len(episode) <= 2:
-				return (season, episode)
+				return season, episode
 			raise TooManyNumbers("invalid length for episode/season numbers")
 		if len(numbers) < 2:
 			raise TooLessNumbers("less than two distinguishable numbers found in filename")
@@ -572,7 +553,7 @@ if __name__ == "__main__":
 		
 		# pop a filename from reader or reread directory
 		input_filename = dir_reader.pop_filename()
-		if file is None:
+		if not input_filename:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
 			sleep(5)
 			print("rereading input directory...", end='')
@@ -609,7 +590,7 @@ if __name__ == "__main__":
 		try:
 			series_number = db.detect_series(input_filename_preprocessed)
 		except ResultNotUnique as e:
-			print("Info: No exact match found: %s, moving file '%s' to no exact match" % (str(found), input_filename))
+			print("Info: No exact match found: moving file '%s' to no exact match" % input_filename)
 			try:
 				move_file(filepath, no_exact_match, input_filename)
 			except:
@@ -656,5 +637,3 @@ if __name__ == "__main__":
 		# FIXME: Old stuff - really needed?
 		bIsAnMkvInputFile = False
 		skip_file = False
-	
-	exit(0)
