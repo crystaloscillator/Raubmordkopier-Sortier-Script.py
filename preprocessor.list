@@ -425,7 +425,7 @@ teil.1;_
 Teil1;_
 teil1;_
 Teil.1;_
-c0nFuSed;confused
+c0nFuSed;_
 .mp4;.mpv
 stream2;stream zwei
 720i;_
@@ -466,3 +466,18 @@ x264;_
 X264;_
 p0w4;_
 Prim3time;_
+60FPS;_
+60fps;_
+H264;_
+24kbit;_
+32kbit;_
+48kbit;_
+56kbit;_
+64kbit;_
+84kbit;_
+96kbit;_
+128kbit;_
+192kbit;_
+256kbit;_
+320kbit;_
+AAC;_

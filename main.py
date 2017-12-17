@@ -14,6 +14,7 @@ from os.path import abspath, expanduser, isfile
 from subprocess import CalledProcessError, DEVNULL, STDOUT, check_call, check_output
 from time import sleep
 from collections import namedtuple
+from re import findall
 
 
 def expand_and_ensure_path(rel_path: str) -> str:
@@ -204,7 +205,7 @@ class series_database:
 						if file_type == "database":
 							name, tuning, keywords = line.split(';')
 						elif file_type == "preprocessor":
-							search, replace = line.split(';')
+							search, replace = line.rstrip('\n').split(';')
 						elif file_type == "seperator":
 							if not len(line) == 1:
 								raise ValueError
@@ -316,7 +317,116 @@ class series_database:
 			return -1
 	
 	def detect_season_episode(self, filename: str) -> tuple:
-		pass
+		"""
+		runs a season + episode detection over a given filename
+		:param filename: takes a preprocessed filename
+		:return: returns a tuple: (season, episode)
+		"""
+		season, episode = 0, 0
+		
+		# old stuff
+		integers = [0, 0, 0, 0]
+		lastCharWasInt = False
+		counter = 0
+		hundersOfEpisodes = False
+		# other old stuff
+		elements_done = False
+		skip_file = False
+		new_filename_ = ""
+		counter = 0
+		new_filename = []
+		tmpint = 0
+		next_word = ""
+		words = []
+		bIsAnMkvInputFile = False
+		TuneProfile = "film"
+		# end of old stuff
+		
+		numbers = findall(r'\d+', filename)
+		
+		[int(s) for s in str.split() if s.isdigit()]
+		
+		for char in filename:
+			try:
+				tmpint = int(char)
+				if counter == 0:
+					integers[0] = tmpint
+				elif counter == 1 and lastCharWasInt:
+					integers[1] = tmpint
+				elif counter == 1 and not lastCharWasInt:  # we have 0x00
+					integers[1] = integers[0]
+					integers[0] = 0
+					integers[2] = tmpint
+					counter += 1
+				elif counter == 2 and lastCharWasInt:  # we have --x000
+					integers[3] = tmpint
+					integers[2] = integers[1]
+					integers[1] = integers[0]
+					integers[0] = 0
+					hundersOfEpisodes = True
+				elif counter == 2 and not lastCharWasInt:
+					integers[2] = tmpint
+				elif counter == 3 and lastCharWasInt and not hundersOfEpisodes:
+					integers[3] = tmpint
+				elif counter == 3 and lastCharWasInt and HundersOfEpisodes:
+					integers[0] = integers[1]
+					integers[1] = integers[2]
+					integers[2] = integers[3]
+					integers[3] = tmpint
+					hundersOfEpisodes = False
+				
+				lastCharWasInt = True
+				counter += 1
+			except:
+				lastCharWasInt = False
+		
+		if counter > 4:
+			try:
+				print("Info: Too many numbers in filename, moving file '" + str(file) + "' to 'too many numbers'")
+				ensure_dir(too_many_numbers + file)
+				shutil.move(file, too_many_numbers + file)
+			except:
+				pass
+			continue
+		
+		elif counter == 0:
+			try:
+				print("Info: No episode/season found, moving file '" + str(file) + "' to 'Filme'")
+				ensure_dir(dl_video_folder + file)
+				shutil.move(file, dl_video_folder + file)
+			except:
+				pass
+			continue
+		
+		elif counter == 1:
+			try:
+				print("Info: Too less numbers in filename, moving file '" + str(file) + "' to 'too less numbers'")
+				ensure_dir(too_less_numbers + file)
+				shutil.move(file, too_less_numbers + file)
+			except:
+				pass
+			continue
+		
+		elif counter == 2:
+			integers[2] = integers[0]
+			integers[3] = integers[1]
+			integers[0] = 0
+			integers[1] = 0
+			hundersOfEpisodes = True
+		
+		if hundersOfEpisodes:
+			new_filename[3] = "x"
+			new_filename[4] = str(integers[1])
+			new_filename[5] = str(integers[2])
+			new_filename[6] = str(integers[3])
+		
+		else:
+			new_filename[2] = str(integers[0])
+			new_filename[3] = str(integers[1])
+			new_filename[5] = str(integers[2])
+			new_filename[6] = str(integers[3])
+		
+		return (season, episode)
 
 if __name__ == "__main__":
 	input_path = "~/downloads/"
@@ -374,7 +484,7 @@ if __name__ == "__main__":
 	TuneProfile = "film"
 	first_time__in_loop = 1
 	
-	while True:
+	while True:  #one loop per file
 		# init vars
 		valid_file, filetype_mkv = False, False
 		output_filename = namedtuple('episode', 'name season episode file_extention tuning')
