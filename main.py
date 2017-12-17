@@ -14,7 +14,7 @@ from subprocess import CalledProcessError, DEVNULL, STDOUT, check_call, check_ou
 from time import sleep
 from collections import namedtuple
 from re import findall
-from own_exceptions import ResultNotUnique, DataValidationError
+from own_exceptions import ResultNotUnique, DataValidationError, TooManyNumbers, TooLessNumbers
 
 
 
@@ -364,56 +364,13 @@ class series_database:
 		if len(numbers) == 2:
 			season = numbers[0]
 			episode = numbers[1]
-			if 1 <= len(season) <= 2 and 1 <= len(episode) <= 2:
-				return season, episode
-			raise DataValidationError("invalid length for episode/season numbers")
-			
-		
-		if counter > 4:
-			try:
-				print("Info: Too many numbers in filename, moving file '%s' to 'too many numbers'" % input_filename)
-				move_file(filepath, too_many_numbers, input_filename)
-			except:
-				pass
-			continue
-		
-		elif counter == 0:
-			try:
-				print("Info: No episode/season found, moving file '%s' to 'Filme'" % input_filename)
-				move_file(filepath, dl_video_folder, input_filename)
-			except:
-				pass
-			continue
-		
-		elif counter == 1:
-			try:
-				print("Info: Too less numbers in filename, moving file '%s' to 'too less numbers'" % input_filename)
-				move_file(filepath, too_less_numbers, input_filename)
-			except:
-				pass
-			continue
-		
-		elif counter == 2:
-			integers[2] = integers[0]
-			integers[3] = integers[1]
-			integers[0] = 0
-			integers[1] = 0
-			hundersOfEpisodes = True
-		
-		if hundersOfEpisodes:
-			new_filename[3] = "x"
-			new_filename[4] = str(integers[1])
-			new_filename[5] = str(integers[2])
-			new_filename[6] = str(integers[3])
-		
-		else:
-			new_filename[2] = str(integers[0])
-			new_filename[3] = str(integers[1])
-			new_filename[5] = str(integers[2])
-			new_filename[6] = str(integers[3])
-		
-		return (season, episode)
-
+			if len(season) <= 2 and len(episode) <= 2:
+				return (season, episode)
+			raise TooManyNumbers("invalid length for episode/season numbers")
+		if len(numbers) < 2:
+			raise TooLessNumbers("less than two distinguishable numbers found in filename")
+		if len(numbers) > 2:
+			raise TooManyNumbers("more than two distinguashable numbers found in filename")
 
 def move_file(source: str, destination: str, filename: str) -> None:
 	ensure_dir(destination + filename)
@@ -486,7 +443,9 @@ if __name__ == "__main__":
 		if file is None:
 			print("Working queue is empty - wait 5 seconds before re-reading this directory")
 			sleep(5)
+			print("rereading input directory...", end='')
 			dir_reader.refresh()
+			print("done.\n")
 			continue
 		
 		# validate file-extentions #FIXME: we need more magic here!
@@ -502,28 +461,63 @@ if __name__ == "__main__":
 				pass
 			continue
 		
+		input_filename_preprocessed = db.preprocessor(input_filename)
+		TooManyNumbers_found = False
+		TooLessNumbers_found = False
 		try:
-			input_filename_preprocessed = db.preprocessor(input_filename)
+			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
+		except TooManyNumbers as e:
+			TooManyNumbers_found = True
+		except TooLessNumbers as e:
+			TooLessNumbers_found = True
+		
+		try:
 			series_number = db.detect_series(input_filename_preprocessed)
-			if series_number == -1:
-				print("Info: Series unknown, moving file '%s' to series unknown" % str(input_filename))
-				try:
-					move_file(filepath, series_unknown, input_filename)
-				except:
-					print("Error: Can't move file '%s'" % input_filename)
-				continue
-		except IndexError as e:
+		except ResultNotUnique as e:
 			print("Info: No exact match found: %s, moving file '%s' to no exact match" % (str(found), input_filename))
 			try:
 				move_file(filepath, no_exact_match, input_filename)
 			except:
 				print("Error: Can't move file '%s'" % input_filename)
 			continue
+		
+		if series_number != -1:  # series found
+			if TooManyNumbers_found:
+				try:
+					print("Info: Too many numbers in filename, moving file '%s' to 'too many numbers'" %
+					      input_filename)
+					move_file(filepath, too_many_numbers, input_filename)
+				except:
+					pass
+				continue
+			if TooLessNumbers_found:
+				try:
+					print("Info: Too less numbers in filename, moving file '%s' to 'too less numbers'" %
+					      input_filename)
+					move_file(filepath, too_less_numbers, input_filename)
+				except:
+					pass
+				continue
+		else:
+			if not TooManyNumbers_found and not TooLessNumbers_found:  # should be a series, but is unknown
+				print("Info: Series unknown, moving file '%s' to series unknown" % str(input_filename))
+				try:
+					move_file(filepath, series_unknown, input_filename)
+				except:
+					print("Error: Can't move file '%s'" % input_filename)
+				continue
+			try:
+				print("Info: No episode/season found, moving file '%s' to 'Filme'" % input_filename)
+				move_file(filepath, dl_video_folder, input_filename)
+			except:
+				pass
+			continue
+		
 		try:
 			output_filename.name = db.get_name(series_number)  # FIXME method missing
 			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
-			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
-		except IndexError as e:
+		except DataValidationError as e:
+			pass
 		
 		
 		
