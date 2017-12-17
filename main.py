@@ -295,16 +295,25 @@ class series_database:
 		
 		found = []
 		for word in words:
+			if debug:
+				print("Searching for words:")
+				print("    " + word, end=' ')
 			try:
 				found.append(self.__db_keywords[word.lower()])
+				if debug:
+					print(" << found in database, Series no %i" % found[-1])
 			except KeyError:
-				pass
+				print()
+		
 		# distinct list
 		found = list(set(found))
 		
 		if len(found) == 1:
 			return found[0]
-		elif
+		elif 1 < len(found):
+			raise IndexError
+		else:
+			return -1
 	
 	def detect_season_episode(self, filename: str) -> tuple:
 		pass
@@ -380,52 +389,41 @@ if __name__ == "__main__":
 		
 		# validate file-extentions #FIXME: we need more magic here!
 		valid_file, filetype_mkv = db.valid_file(input_path)
+		filepath = input_path + '/' + input_filename
 		if not valid_file:
-			if isfile(input_path + '/' + input_filename):  #make sure this isn't a directory
+			if isfile(filepath):  # make sure this isn't a directory
 				try:
-					print("Info: No usable file-extension found, moving file '" + str(file) + "' to 'other files'")
+					print("Info: No usable file-extension found, moving file '%s' to 'other files'" % input_filename)
 					ensure_dir(other_files_dir + input_filename)
-					shutil.move(input_filename, other_files_dir + input_filename)
+					shutil.move(filepath, other_files_dir + input_filename)
 				except:
-					print("Error: Can't move file '" + str(input_filename) + "'")
+					print("Error: Can't move file '%s'" % input_filename)
 				pass
 			continue
 		
 		try:
 			input_filename_preprocessed = db.preprocessor(input_filename)
 			series_number = db.detect_series(input_filename_preprocessed)
-			if series_number is None:
-				print("Info: Series unknown, moving file '" + str(file) + "' to series unknown")
-			# FIXME do stuff here
-			# try:
-			#	ensure_dir(series_unknown + file)
-			#	shutil.move(file, series_unknown + file)
-			# except:
-			#	pass
-			# continue
+			if series_number == -1:
+				print("Info: Series unknown, moving file '%s' to series unknown" % str(input_filename))
+				try:
+					ensure_dir(series_unknown + input_filename)
+					shutil.move(filepath, series_unknown + input_filename)
+				except:
+					print("Error: Can't move file '%s'" % input_filename)
+				continue
 			output_filename.name = db.get_name(series_number)  # FIXME method missing
 			output_filename.tuning = db.get_tuning(series_number)  # FIXME method missing
 			output_filename.season, output_filename.episode = db.detect_season_episode(input_filename_preprocessed)
 		
 		except IndexError as e:
-			print("detection of series not unique, moving file")
-			# old output: print("Info: No exact match found: " + str(found) + ", moving file '" + str(file) + "' to no
-			#  exact match")
-			# FIXME do stuff here:
-			# try:
-			#	ensure_dir(no_exact_match + file)
-			#	shutil.move(file, no_exact_match + file)
-			# except:
-			#	pass
+			print("Info: No exact match found: %s, moving file '%s' to no exact match" % (str(found), input_filename))
+			try:
+				ensure_dir(no_exact_match + input_filename)
+				shutil.move(filepath, no_exact_match + input_filename)
+			except:
+				print("Error: Can't move file '%s'" % input_filename)
 			continue
-		
-		except ValueError as e:
-			print("undetectable episode/series, moving file")
-		# FIXME do stuff here
-			
-		
-		
-		
 		
 		
 		# FIXME: Old stuff - really needed?
